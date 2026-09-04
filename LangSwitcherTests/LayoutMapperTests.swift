@@ -329,6 +329,170 @@ final class LayoutMapperTests: XCTestCase {
         XCTAssertEqual(result, "привіт")
     }
     
+    // MARK: - Polish layouts (Issue #2: Base Polish ↔ Ukrainian conversion)
+    //
+    // macOS ships two Polish layouts:
+    // - "Polish" (id com.apple.keylayout.PolishPro) = QWERTY, base identical to US.
+    //   Diacritics (ą ć ę ł ń ó ś ź ż) live on the Option layer — covered by Issue #3.
+    // - "Polish – QWERTZ" (id com.apple.keylayout.Polish) = QWERTZ, y↔z swapped.
+    //
+    // Base conversion covers unmodified keys only (A–Z, 0–9, punctuation).
+    
+    func testCharacterMapMatchesPolishProLayout() {
+        let map = LayoutCharacterMap.characterMap(for: "com.apple.keylayout.PolishPro")
+        XCTAssertNotNil(map, "PolishPro layout should be recognized")
+    }
+    
+    func testCharacterMapMatchesPolishQWERTZLayout() {
+        let map = LayoutCharacterMap.characterMap(for: "com.apple.keylayout.Polish")
+        XCTAssertNotNil(map, "Polish QWERTZ layout should be recognized")
+    }
+    
+    func testPolishProBaseIdenticalToUS() {
+        let plMap = LayoutCharacterMap.characterMap(for: "com.apple.keylayout.PolishPro")
+        let usMap = LayoutCharacterMap.characterMap(for: "com.apple.keylayout.US")
+        XCTAssertNotNil(plMap)
+        XCTAssertNotNil(usMap)
+        // Unmodified base letters must match US QWERTY
+        for char in ["a", "q", "w", "e", "s", "z", "m"] {
+            XCTAssertEqual(plMap?[Character(char)], usMap?[Character(char)],
+                           "PolishPro '\(char)' should match US")
+        }
+    }
+    
+    func testPolishProDoesNotMatchUSPattern() {
+        // PolishPro must resolve to its own map, not fall through to "us"
+        // (no substring collision today, but guards against future reordering)
+        let plMap = LayoutCharacterMap.characterMap(for: "com.apple.keylayout.PolishPro")
+        XCTAssertNotNil(plMap)
+        // PolishPro base is QWERTY-identical, so spot-check a letter stays Latin
+        XCTAssertEqual(plMap?[Character("q")], Character("q"))
+    }
+    
+    func testPolishQWERTZSwapsYZ() {
+        let map = LayoutCharacterMap.characterMap(for: "com.apple.keylayout.Polish")
+        XCTAssertNotNil(map)
+        XCTAssertEqual(map?[Character("y")], Character("z"),
+                       "Polish QWERTZ: QWERTY-y key produces 'z'")
+        XCTAssertEqual(map?[Character("z")], Character("y"),
+                       "Polish QWERTZ: QWERTY-z key produces 'y'")
+        XCTAssertEqual(map?[Character("Y")], Character("Z"))
+        XCTAssertEqual(map?[Character("Z")], Character("Y"))
+    }
+    
+    func testPolishProAndQWERTZAreDistinct() {
+        let proMap = LayoutCharacterMap.characterMap(for: "com.apple.keylayout.PolishPro")
+        let qwMap = LayoutCharacterMap.characterMap(for: "com.apple.keylayout.Polish")
+        XCTAssertNotNil(proMap)
+        XCTAssertNotNil(qwMap)
+        // The only base difference is y↔z
+        XCTAssertNotEqual(proMap?[Character("y")], qwMap?[Character("y")],
+                          "PolishPro vs QWERTZ must differ on 'y'")
+    }
+    
+    func testConvertENtoPLPro_identity() {
+        // QWERTY-identical bases: EN→PLPro is identity for plain ASCII letters
+        let result = LayoutMapper.convert(
+            text: "hello",
+            from: "com.apple.keylayout.US",
+            to: "com.apple.keylayout.PolishPro"
+        )
+        XCTAssertEqual(result, "hello")
+    }
+    
+    func testConvertENtoPLQWERTZ_yz() {
+        let resultY = LayoutMapper.convert(
+            text: "y",
+            from: "com.apple.keylayout.US",
+            to: "com.apple.keylayout.Polish"
+        )
+        XCTAssertEqual(resultY, "z")
+        let resultZ = LayoutMapper.convert(
+            text: "z",
+            from: "com.apple.keylayout.US",
+            to: "com.apple.keylayout.Polish"
+        )
+        XCTAssertEqual(resultZ, "y")
+    }
+    
+    func testConvertPLProtoUK_privit() {
+        // "ghbdsn" typed with PolishPro (same physical keys as US) → Ukrainian "привіт"
+        let result = LayoutMapper.convert(
+            text: "ghbdsn",
+            from: "com.apple.keylayout.PolishPro",
+            to: "com.apple.keylayout.Ukrainian"
+        )
+        XCTAssertEqual(result, "привіт")
+    }
+    
+    func testConvertUKtoPLPro_privit() {
+        // Ukrainian "привіт" typed with Ukrainian layout, viewed through PolishPro → "ghbdsn"
+        let result = LayoutMapper.convert(
+            text: "привіт",
+            from: "com.apple.keylayout.Ukrainian",
+            to: "com.apple.keylayout.PolishPro"
+        )
+        XCTAssertEqual(result, "ghbdsn")
+    }
+    
+    func testConvertPLQWERTZtoUK_yzDiscriminator() {
+        // Physical QWERTY-y key: Polish QWERTZ shows 'z', Ukrainian shows 'н'
+        let fromQWERTZ = LayoutMapper.convert(
+            text: "z",
+            from: "com.apple.keylayout.Polish",
+            to: "com.apple.keylayout.Ukrainian"
+        )
+        XCTAssertEqual(fromQWERTZ, "н")
+        // Same letter through PolishPro (QWERTY-z key) → Ukrainian 'я'
+        let fromPro = LayoutMapper.convert(
+            text: "z",
+            from: "com.apple.keylayout.PolishPro",
+            to: "com.apple.keylayout.Ukrainian"
+        )
+        XCTAssertEqual(fromPro, "я")
+    }
+    
+    func testConvertUKtoPLQWERTZ_yzDiscriminator() {
+        // Ukrainian 'н' lives on QWERTY-y key → Polish QWERTZ shows 'z'
+        let result = LayoutMapper.convert(
+            text: "н",
+            from: "com.apple.keylayout.Ukrainian",
+            to: "com.apple.keylayout.Polish"
+        )
+        XCTAssertEqual(result, "z")
+    }
+    
+    func testRoundTrip_PLProtoUKandBack() {
+        let original = "ghbdsn"
+        let toUK = LayoutMapper.convert(
+            text: original,
+            from: "com.apple.keylayout.PolishPro",
+            to: "com.apple.keylayout.Ukrainian"
+        )
+        XCTAssertNotNil(toUK)
+        let backToPL = LayoutMapper.convert(
+            text: toUK!,
+            from: "com.apple.keylayout.Ukrainian",
+            to: "com.apple.keylayout.PolishPro"
+        )
+        XCTAssertEqual(backToPL, original)
+    }
+    
+    func testDetectSourceLayout_PolishVsUkrainian() {
+        // Latin text → PolishPro source
+        let latin = LayoutMapper.detectSourceLayout(
+            text: "hello",
+            candidateLayouts: ["com.apple.keylayout.PolishPro", "com.apple.keylayout.Ukrainian"]
+        )
+        XCTAssertEqual(latin, "com.apple.keylayout.PolishPro")
+        // Cyrillic text → Ukrainian source
+        let cyrillic = LayoutMapper.detectSourceLayout(
+            text: "привіт",
+            candidateLayouts: ["com.apple.keylayout.PolishPro", "com.apple.keylayout.Ukrainian"]
+        )
+        XCTAssertEqual(cyrillic, "com.apple.keylayout.Ukrainian")
+    }
+    
     // MARK: - detectSourceLayout
     
     func testDetectSourceLayout_CyrillicText() {

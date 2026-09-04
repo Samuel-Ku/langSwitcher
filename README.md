@@ -39,7 +39,7 @@ https://github.com/reg2005/langSwitcher/raw/main/screenshots/langSwitch.mp4
 - **Conversion Log** — optionally log conversions to a local SQLite database (disabled by default for privacy). Review and label entries (correct/incorrect) for future ML training
 - **JSON export** — export conversion logs for data analysis or model training
 - **Menu bar app** — lives quietly in your status bar, always ready
-- **Multiple layouts** — English, Russian, German, French, Spanish (5 layouts)
+- **Multiple layouts** — English, Russian, Ukrainian, Polish, German, French, Spanish (8 layouts)
 - **Punctuation preservation** — `?`, `!`, `/` and other punctuation stay unchanged during conversion
 - **Zero dependencies** — pure Swift, no external libraries, no dictionaries
 - **Privacy first** — no data leaves your Mac, no analytics, no network access
@@ -174,6 +174,9 @@ LangSwitcher detects layouts from your **System Settings > Keyboard > Input Sour
 | U.S. (QWERTY) | `en` | QWERTY |
 | ABC | `en` | QWERTY |
 | Russian | `ru` | ЙЦУКЕН |
+| Ukrainian | `uk` | ЙЦУКЕН (Ukrainian) |
+| Polish | `pl` | QWERTY (Polish Pro) |
+| Polish – QWERTZ | `pl` | QWERTZ (Polish) |
 | German | `de` | QWERTZ |
 | French | `fr` | AZERTY |
 | Spanish | `es` | QWERTY (Spanish) |

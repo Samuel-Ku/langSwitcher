@@ -91,15 +91,44 @@ enum LayoutCharacterMap {
         return map
     }()
     
+    // Polish Pro ("Polish" on modern macOS, id com.apple.keylayout.PolishPro)
+    // QWERTY base identical to US — unmodified keys produce the same characters.
+    // Polish diacritics (ą ć ę ł ń ó ś ź ż) live on the Option layer — see Issue #3.
+    // Base conversion therefore reuses the US QWERTY mapping.
+    static let polishPro: [Character: Character] = {
+        let qwerty = Array("`1234567890-=qwertyuiop[]\\asdfghjkl;'zxcvbnm,./~!@#$%^&*()_+QWERTYUIOP{}|ASDFGHJKL:\"ZXCVBNM<>?")
+        var map: [Character: Character] = [:]
+        for c in qwerty {
+            map[c] = c
+        }
+        return map
+    }()
+    
+    // Polish QWERTZ ("Polish – QWERTZ", id com.apple.keylayout.Polish)
+    // Traditional QWERTZ variant: y↔z swapped vs QWERTY, rest of base identical.
+    // (Dedicated Polish-letter keys and Option-layer diacritics — see Issue #3.)
+    static let polishQWERTZ: [Character: Character] = {
+        let qwerty = Array("`1234567890-=qwertyuiop[]\\asdfghjkl;'zxcvbnm,./~!@#$%^&*()_+QWERTYUIOP{}|ASDFGHJKL:\"ZXCVBNM<>?")
+        let polish = Array("`1234567890-=qwertzuiop[]\\asdfghjkl;'yxcvbnm,./~!@#$%^&*()_+QWERTZUIOP{}|ASDFGHJKL:\"YXCVBNM<>?")
+        var map: [Character: Character] = [:]
+        for i in 0..<min(qwerty.count, polish.count) {
+            map[qwerty[i]] = polish[i]
+        }
+        return map
+    }()
+    
     // Map of layout identifier patterns to their character maps
     // IMPORTANT: Order matters! More specific patterns must come BEFORE less specific ones.
     // e.g., "russian" must come before "us" because "russian" contains "us" as substring.
+    // e.g., "polishpro" must come before "polish" because "polishpro" contains "polish".
     static let allMaps: [(pattern: String, map: [Character: Character])] = [
         ("russian", russian),
         ("ukrainian", ukrainian),
         ("german", german),
         ("french", french),
         ("spanish", spanish),
+        ("polishpro", polishPro),
+        ("polish", polishQWERTZ),
         ("british", qwertyUS),    // Close enough for conversion
         ("abc", qwertyUS),        // ABC keyboard is same as US
         ("us", qwertyUS),         // Must be LAST among Latin layouts — "us" is substring of "russian" etc.
