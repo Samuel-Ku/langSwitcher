@@ -493,6 +493,151 @@ final class LayoutMapperTests: XCTestCase {
         XCTAssertEqual(cyrillic, "com.apple.keylayout.Ukrainian")
     }
     
+    // MARK: - Polish diacritics (Issue #3: modifier characters)
+    //
+    // On Polish Pro every diacritic is a single Option chord on its base key:
+    // ą=Opt+A, ć=Opt+C, ę=Opt+E, ł=Opt+L, ń=Opt+N, ó=Opt+O, ś=Opt+S,
+    // ź=Opt+X (exception — ż took Z), ż=Opt+Z. Capitals add Shift.
+    // Conversion folds each diacritic through its physical base key:
+    // PL diacritic → UK letter; UK → PL always yields the BASE letter
+    // (diacritic intent is unrecoverable, so no diacritic synthesis).
+    
+    func testPolishDiacriticBases_lowercase() {
+        let bases = LayoutCharacterMap.polishDiacriticBases
+        let expected: [Character: Character] = [
+            "ą": "a", "ć": "c", "ę": "e", "ł": "l", "ń": "n",
+            "ó": "o", "ś": "s", "ź": "x", "ż": "z",
+        ]
+        XCTAssertEqual(bases.filter { $0.key.isLowercase }.count, 9,
+                       "Must cover all 9 lowercase Polish diacritics")
+        for (diacritic, base) in expected {
+            XCTAssertEqual(bases[diacritic], base,
+                           "'\(diacritic)' must fold to base key '\(base)'")
+        }
+    }
+    
+    func testPolishDiacriticBases_uppercase() {
+        let bases = LayoutCharacterMap.polishDiacriticBases
+        let expected: [Character: Character] = [
+            "Ą": "A", "Ć": "C", "Ę": "E", "Ł": "L", "Ń": "N",
+            "Ó": "O", "Ś": "S", "Ź": "X", "Ż": "Z",
+        ]
+        for (diacritic, base) in expected {
+            XCTAssertEqual(bases[diacritic], base,
+                           "'\(diacritic)' must fold to base key '\(base)'")
+        }
+    }
+    
+    func testPolishDiacriticBases_zWithDotVsAcute() {
+        // The one non-intuitive pair: ż lives on Z, ź lives on X
+        let bases = LayoutCharacterMap.polishDiacriticBases
+        XCTAssertEqual(bases["ż"], "z")
+        XCTAssertEqual(bases["ź"], "x")
+        XCTAssertEqual(bases["Ż"], "Z")
+        XCTAssertEqual(bases["Ź"], "X")
+    }
+    
+    func testConvertPLProToUK_pangram() {
+        // "Zażółć gęślą jaźń" — classic Polish pangram covering all 9 diacritics
+        let result = LayoutMapper.convert(
+            text: "Zażółć gęślą jaźń",
+            from: "com.apple.keylayout.PolishPro",
+            to: "com.apple.keylayout.Ukrainian"
+        )
+        XCTAssertEqual(result, "Яфящдс пуідф офчт")
+    }
+    
+    func testConvertPLProToUK_czesc() {
+        let result = LayoutMapper.convert(
+            text: "cześć",
+            from: "com.apple.keylayout.PolishPro",
+            to: "com.apple.keylayout.Ukrainian"
+        )
+        XCTAssertEqual(result, "сяуіс")
+    }
+    
+    func testConvertPLProToUK_uppercaseDiacritics() {
+        let result = LayoutMapper.convert(
+            text: "ŁÓDŹ",
+            from: "com.apple.keylayout.PolishPro",
+            to: "com.apple.keylayout.Ukrainian"
+        )
+        XCTAssertEqual(result, "ДЩВЧ")
+    }
+    
+    func testConvertPLProToEN_diacriticsStripped() {
+        // Same physical keys through US layout yield plain ASCII.
+        // Note: Ź lives on X (ż took Z), so ŁÓDŹ folds to LODX, not LODZ —
+        // this is physical-key truth, not transliteration.
+        XCTAssertEqual(
+            LayoutMapper.convert(
+                text: "cześć",
+                from: "com.apple.keylayout.PolishPro",
+                to: "com.apple.keylayout.US"
+            ),
+            "czesc"
+        )
+        XCTAssertEqual(
+            LayoutMapper.convert(
+                text: "ŁÓDŹ",
+                from: "com.apple.keylayout.PolishPro",
+                to: "com.apple.keylayout.US"
+            ),
+            "LODX"
+        )
+    }
+    
+    func testConvertPLProToUK_trailingPunctuation() {
+        // Punctuation preservation still applies around folded diacritics
+        let result = LayoutMapper.convert(
+            text: "cześć!",
+            from: "com.apple.keylayout.PolishPro",
+            to: "com.apple.keylayout.Ukrainian"
+        )
+        XCTAssertEqual(result, "сяуіс!")
+    }
+    
+    func testConvertUKtoPLPro_neverSynthesizesDiacritics() {
+        // "ф" lives on the A key: without Option intent we must emit base "a", not "ą"
+        XCTAssertEqual(
+            LayoutMapper.convert(
+                text: "ф",
+                from: "com.apple.keylayout.Ukrainian",
+                to: "com.apple.keylayout.PolishPro"
+            ),
+            "a"
+        )
+        XCTAssertEqual(
+            LayoutMapper.convert(
+                text: "іч",
+                from: "com.apple.keylayout.Ukrainian",
+                to: "com.apple.keylayout.PolishPro"
+            ),
+            "sx"
+        )
+    }
+    
+    func testConvertPLQWERTZtoUK_diacritics() {
+        // Same folding rule applies to the QWERTZ variant (approximation:
+        // diacritics resolve to QWERTY base keys, see KeyboardLayout.swift)
+        XCTAssertEqual(
+            LayoutMapper.convert(
+                text: "ź",
+                from: "com.apple.keylayout.Polish",
+                to: "com.apple.keylayout.Ukrainian"
+            ),
+            "ч"
+        )
+        XCTAssertEqual(
+            LayoutMapper.convert(
+                text: "ż",
+                from: "com.apple.keylayout.Polish",
+                to: "com.apple.keylayout.Ukrainian"
+            ),
+            "я"
+        )
+    }
+    
     // MARK: - detectSourceLayout
     
     func testDetectSourceLayout_CyrillicText() {

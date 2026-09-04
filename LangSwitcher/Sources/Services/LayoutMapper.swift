@@ -35,6 +35,13 @@ final class LayoutMapper {
         // keep the original character. This handles cases like "?" -> "," where the user
         // intentionally typed "?" and it should stay "?", not become ",".
         // But ";" -> "ж" still converts because the target is a letter.
+        //
+        // Polish diacritics (Issue #3): Option-layer chars (ą ć ę ł ń ó ś ź ż)
+        // are absent from the base reverse map, so when the source is Polish
+        // they fold through LayoutCharacterMap.polishDiacriticBases to their
+        // physical base key first. Diacritics are letters, so they always
+        // convert (the punctuation rule never fires for them).
+        let isPolishSource = sourceLayoutID.lowercased().contains("polish")
         var result = ""
         var unmappedCount = 0
         for char in text {
@@ -47,6 +54,10 @@ final class LayoutMapper {
                 } else {
                     result.append(targetChar)
                 }
+            } else if isPolishSource,
+                      let baseKey = LayoutCharacterMap.polishDiacriticBases[char],
+                      let targetChar = targetMap[baseKey] {
+                result.append(targetChar)
             } else {
                 // Character not in mapping (e.g., space, numbers that don't change, emoji)
                 result.append(char)

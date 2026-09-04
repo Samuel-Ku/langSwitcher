@@ -117,6 +117,22 @@ enum LayoutCharacterMap {
         return map
     }()
     
+    // Polish Option-layer diacritics → QWERTY base key (Issue #3).
+    // On Polish Pro each diacritic is a single Option chord on its base key;
+    // the only exception is ź on X (ż took Z). Capitals add Shift.
+    // Used source-side only: PL diacritic → physical key → target layout char.
+    // The reverse (target-side synthesis) is intentionally unsupported —
+    // diacritic intent is unrecoverable from the base letter.
+    // Note: for the QWERTZ variant this resolves to QWERTY base keys as an
+    // approximation (its dedicated diacritic keys have no public keylayout
+    // data to derive exact physical positions from).
+    static let polishDiacriticBases: [Character: Character] = [
+        "ą": "a", "ć": "c", "ę": "e", "ł": "l", "ń": "n",
+        "ó": "o", "ś": "s", "ź": "x", "ż": "z",
+        "Ą": "A", "Ć": "C", "Ę": "E", "Ł": "L", "Ń": "N",
+        "Ó": "O", "Ś": "S", "Ź": "X", "Ż": "Z",
+    ]
+    
     // Map of layout identifier patterns to their character maps
     // IMPORTANT: Order matters! More specific patterns must come BEFORE less specific ones.
     // e.g., "russian" must come before "us" because "russian" contains "us" as substring.
