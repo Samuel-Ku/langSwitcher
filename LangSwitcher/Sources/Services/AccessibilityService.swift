@@ -166,6 +166,36 @@ final class AccessibilityService {
         return true
     }
     
+    // MARK: - Focused Field (Issue #6)
+    
+    /// Role/subrole of the currently focused UI element, or nil when it
+    /// cannot be determined (no AX permission, non-standard UI).
+    /// Thin AX glue — policy lives in AutoCorrectionGate; callers fail
+    /// closed on nil.
+    func focusedFieldRole() -> (role: String?, subrole: String?)? {
+        let systemWide = AXUIElementCreateSystemWide()
+        var focused: CFTypeRef?
+        guard AXUIElementCopyAttributeValue(
+            systemWide,
+            kAXFocusedUIElementAttribute as CFString,
+            &focused
+        ) == .success, let element = focused else {
+            NSLog("[LangSwitcher] focusedFieldRole: no focused element (AX permission?)")
+            return nil
+        }
+        
+        let axElement = element as! AXUIElement
+        var roleValue: CFTypeRef?
+        AXUIElementCopyAttributeValue(axElement, kAXRoleAttribute as CFString, &roleValue)
+        var subroleValue: CFTypeRef?
+        AXUIElementCopyAttributeValue(axElement, kAXSubroleAttribute as CFString, &subroleValue)
+        
+        let role = roleValue as? String
+        let subrole = subroleValue as? String
+        NSLog("[LangSwitcher] focusedFieldRole: role='\(role ?? "nil")' subrole='\(subrole ?? "nil")'")
+        return (role, subrole)
+    }
+    
     // MARK: - Keyboard Simulation
     
     /// Helper: post a key event with modifiers.

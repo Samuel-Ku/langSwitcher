@@ -28,9 +28,11 @@
 		E10000010000000000000019 /* LocalizationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10000020000000000000019 /* LocalizationManager.swift */; };
 		E10000010000000000000020 /* Strings_en.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10000020000000000000020 /* Strings_en.swift */; };
 		E10000010000000000000021 /* Strings_ru.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10000020000000000000021 /* Strings_ru.swift */; };
+		E10000010000000000000022 /* AutoCorrectionGate.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10000020000000000000022 /* AutoCorrectionGate.swift */; };
 		E10000010000000000000101 /* LayoutMapperTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10000020000000000000101 /* LayoutMapperTests.swift */; };
 		E10000010000000000000102 /* TextConverterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10000020000000000000102 /* TextConverterTests.swift */; };
 		E10000010000000000000103 /* HotkeyManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10000020000000000000103 /* HotkeyManagerTests.swift */; };
+		E10000010000000000000104 /* AutoCorrectionGateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10000020000000000000104 /* AutoCorrectionGateTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -65,9 +67,11 @@
 		E10000020000000000000019 /* LocalizationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalizationManager.swift; sourceTree = "<group>"; };
 		E10000020000000000000020 /* Strings_en.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Strings_en.swift; sourceTree = "<group>"; };
 		E10000020000000000000021 /* Strings_ru.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Strings_ru.swift; sourceTree = "<group>"; };
+		E10000020000000000000022 /* AutoCorrectionGate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoCorrectionGate.swift; sourceTree = "<group>"; };
 		E10000020000000000000101 /* LayoutMapperTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LayoutMapperTests.swift; sourceTree = "<group>"; };
 		E10000020000000000000102 /* TextConverterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextConverterTests.swift; sourceTree = "<group>"; };
 		E10000020000000000000103 /* HotkeyManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HotkeyManagerTests.swift; sourceTree = "<group>"; };
+		E10000020000000000000104 /* AutoCorrectionGateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoCorrectionGateTests.swift; sourceTree = "<group>"; };
 		E10000030000000000000001 /* LangSwitcher.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LangSwitcher.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		E10000030000000000000002 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		E10000030000000000000003 /* LangSwitcher.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = LangSwitcher.entitlements; sourceTree = "<group>"; };
@@ -156,6 +160,7 @@
 				E10000020000000000000010 /* AccessibilityService.swift */,
 				E10000020000000000000011 /* SettingsManager.swift */,
 				E10000020000000000000017 /* ConversionLogStore.swift */,
+				E10000020000000000000022 /* AutoCorrectionGate.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -202,6 +207,7 @@
 				E10000020000000000000101 /* LayoutMapperTests.swift */,
 				E10000020000000000000102 /* TextConverterTests.swift */,
 				E10000020000000000000103 /* HotkeyManagerTests.swift */,
+				E10000020000000000000104 /* AutoCorrectionGateTests.swift */,
 			);
 			path = LangSwitcherTests;
 			sourceTree = "<group>";
@@ -325,6 +331,7 @@
 				E10000010000000000000019 /* LocalizationManager.swift in Sources */,
 				E10000010000000000000020 /* Strings_en.swift in Sources */,
 				E10000010000000000000021 /* Strings_ru.swift in Sources */,
+				E10000010000000000000022 /* AutoCorrectionGate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -335,6 +342,7 @@
 				E10000010000000000000101 /* LayoutMapperTests.swift in Sources */,
 				E10000010000000000000102 /* TextConverterTests.swift in Sources */,
 				E10000010000000000000103 /* HotkeyManagerTests.swift in Sources */,
+				E10000010000000000000104 /* AutoCorrectionGateTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

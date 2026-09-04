@@ -194,6 +194,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         guard settingsManager.autoCorrectOnSpace else { return }
         // Never steal Spaces typed in our own windows (Settings search etc.)
         guard !NSApp.isActive else { return }
+        // Issue #6: secure fields, non-text focus and excluded apps veto.
+        // Unknown focus fails closed (nil role denies).
+        let focus = accessibilityService.focusedFieldRole()
+        let frontmostBundleID = NSWorkspace.shared.frontmostApplication?.bundleIdentifier
+        guard AutoCorrectionGate.allowsAutoCorrection(
+            role: focus?.role,
+            subrole: focus?.subrole,
+            bundleID: frontmostBundleID
+        ) else {
+            NSLog("[LangSwitcher] performSpaceAutoCorrection: vetoed by AutoCorrectionGate")
+            return
+        }
         // Drop overlapping triggers while a correction is running
         guard !autoCorrectInFlight else { return }
         autoCorrectInFlight = true
