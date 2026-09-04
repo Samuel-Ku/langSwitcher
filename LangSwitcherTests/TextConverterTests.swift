@@ -349,4 +349,68 @@ final class TextConverterTests: XCTestCase {
     func testConvertIfWrongLayout_WhitespaceAbstains() {
         XCTAssertNil(converter.convertIfWrongLayout("   "))
     }
+    
+    // MARK: - shouldAutoCorrect / autoCorrectWord (Issue #5: boundaries)
+    //
+    // The silent Space flow abstains unless the word is fully convertible:
+    // at least 2 letters, no digits, and every letter in the detected
+    // source alphabet (Polish diacritics count when source is Polish).
+    // Mixed-script words fail the last rule on the foreign half.
+    // Manual hotkey conversion (convertIfWrongLayout) stays permissive.
+    
+    func testShouldAutoCorrect_OrdinaryWord() {
+        XCTAssertTrue(converter.shouldAutoCorrect("ghbdtn"))
+        XCTAssertTrue(converter.shouldAutoCorrect("ghbdtn "))
+    }
+    
+    func testShouldAutoCorrect_SingleCharAbstains() {
+        XCTAssertFalse(converter.shouldAutoCorrect("a"))
+        XCTAssertFalse(converter.shouldAutoCorrect("q"))
+        XCTAssertFalse(converter.shouldAutoCorrect("я"))
+        XCTAssertFalse(converter.shouldAutoCorrect("a "))
+    }
+    
+    func testShouldAutoCorrect_DigitsAbstain() {
+        XCTAssertFalse(converter.shouldAutoCorrect("abc123"))
+        XCTAssertFalse(converter.shouldAutoCorrect("test1 "))
+        XCTAssertFalse(converter.shouldAutoCorrect("2024"))
+    }
+    
+    func testShouldAutoCorrect_MixedScriptAbstains() {
+        XCTAssertFalse(converter.shouldAutoCorrect("helloмир"))
+        XCTAssertFalse(converter.shouldAutoCorrect("приветhi"))
+    }
+    
+    func testShouldAutoCorrect_PartiallyConvertibleAbstains() {
+        // ż/ó/ł/ć are outside the US alphabet: with a US+RU pair the word
+        // would convert only partially, so the auto flow must abstain.
+        XCTAssertFalse(converter.shouldAutoCorrect("Zażółć"))
+    }
+    
+    func testShouldAutoCorrect_EmptyAbstains() {
+        XCTAssertFalse(converter.shouldAutoCorrect(""))
+        XCTAssertFalse(converter.shouldAutoCorrect("   "))
+    }
+    
+    func testAutoCorrectWord_OrdinaryWord() {
+        let info = converter.autoCorrectWord("ghbdtn")
+        XCTAssertNotNil(info)
+        XCTAssertEqual(info?.text, "привет")
+    }
+    
+    func testAutoCorrectWord_TrailingSpace() {
+        XCTAssertEqual(converter.autoCorrectWord("ghbdtn ")?.text, "привет ")
+    }
+    
+    func testAutoCorrectWord_WrongCyrillic() {
+        XCTAssertEqual(converter.autoCorrectWord("руддщ")?.text, "hello")
+    }
+    
+    func testAutoCorrectWord_Abstentions() {
+        XCTAssertNil(converter.autoCorrectWord("a"))
+        XCTAssertNil(converter.autoCorrectWord("abc123"))
+        XCTAssertNil(converter.autoCorrectWord("helloмир"))
+        XCTAssertNil(converter.autoCorrectWord("Zażółć"))
+        XCTAssertNil(converter.autoCorrectWord(""))
+    }
 }

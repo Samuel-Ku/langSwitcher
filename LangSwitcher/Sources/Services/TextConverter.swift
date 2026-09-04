@@ -83,6 +83,55 @@ final class TextConverter {
         return convertSelectedTextWithInfo(text)
     }
     
+    /// Minimum letters for automatic correction (Issue #5).
+    /// Single characters are too ambiguous to rewrite silently
+    /// ("a" could be English, or Ukrainian "ф" on the wrong layout).
+    static let autoCorrectMinLetters = 2
+    
+    /// Whether a word is eligible for AUTOMATIC correction (Issue #5).
+    /// Manual hotkey conversion stays permissive; the silent Space flow
+    /// abstains unless ALL of these hold (checked on the trimmed word):
+    /// - at least `autoCorrectMinLetters` letters,
+    /// - no digits (versions, identifiers, model numbers),
+    /// - every letter belongs to the detected source alphabet
+    ///   (Polish diacritics count when the source is Polish).
+    /// The last rule also rejects mixed-script words: the foreign half is
+    /// outside the detected alphabet, so converting would garble it.
+    func shouldAutoCorrect(_ text: String) -> Bool {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        let letters = trimmed.filter(\.isLetter)
+        guard letters.count >= Self.autoCorrectMinLetters else { return false }
+        guard !trimmed.contains(where: \.isNumber) else { return false }
+        
+        let layouts = settingsManager.enabledLayouts
+        guard layouts.count >= 2 else { return false }
+        guard let sourceID = LayoutMapper.detectSourceLayout(
+            text: trimmed,
+            candidateLayouts: layouts.map(\.id)
+        ) else { return false }
+        guard let sourceMap = LayoutCharacterMap.characterMap(for: sourceID) else {
+            return false
+        }
+        let alphabet = Set(sourceMap.values)
+        let isPolishSource = sourceID.lowercased().contains("polish")
+        for letter in letters {
+            if alphabet.contains(letter) { continue }
+            if isPolishSource, LayoutCharacterMap.polishDiacriticBases[letter] != nil { continue }
+            return false
+        }
+        return true
+    }
+    
+    /// Automatic-correction decision (Issues #4+#5): boundary rules first,
+    /// then the wrong-layout check. Returns nil whenever the flow abstains.
+    func autoCorrectWord(_ text: String) -> ConversionResult? {
+        guard shouldAutoCorrect(text) else {
+            NSLog("[LangSwitcher] autoCorrectWord: abstaining for '\(text)'")
+            return nil
+        }
+        return convertIfWrongLayout(text)
+    }
+    
     /// Check if text looks like it was typed in the wrong keyboard layout.
     /// For example, "ghbdtn" typed on QWERTY when meaning "привет" on Russian layout.
     /// We check: if converting the text to another layout produces something more "readable".

@@ -153,7 +153,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     
     /// Last Word mode: select one word left, convert if it looks wrong
     private func performLastWordConversion() {
-        guard let corrected = convertWordLeftOfCursor() else { return }
+        guard let corrected = convertWordLeftOfCursor(using: { [weak self] text in
+            self?.textConverter.convertIfWrongLayout(text)
+        }) else { return }
         settingsManager.incrementConversionCount()
         logConversion(input: corrected.input, output: corrected.output, mode: "lastWord")
         switchLayoutIfNeeded(targetLayoutID: corrected.targetLayoutID, conversionOccurred: true)
@@ -162,13 +164,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
     
     /// Shared core for word-left-of-cursor flows: select one word left and
-    /// convert it if and only if it looks like the wrong layout.
-    /// Returns the input/output pair plus target layout, or nil if abstained.
-    private func convertWordLeftOfCursor() -> (input: String, output: String, targetLayoutID: String?)? {
+    /// apply the given decision. The manual Last Word flow decides with
+    /// `convertIfWrongLayout`; the automatic Space flow with `autoCorrectWord`
+    /// (Issue #5 rules). Returns the pair plus target layout, or nil if abstained.
+    private func convertWordLeftOfCursor(
+        using decide: (String) -> TextConverter.ConversionResult?
+    ) -> (input: String, output: String, targetLayoutID: String?)? {
         var captured: (input: String, output: String, targetLayoutID: String?)?
-        let success = accessibilityService.selectAndReplaceLastWord { [weak self] (text: String) -> String? in
+        let success = accessibilityService.selectAndReplaceLastWord { (text: String) -> String? in
             NSLog("[LangSwitcher] convertWordLeftOfCursor got: '\(text)'")
-            guard let info = self?.textConverter.convertIfWrongLayout(text) else { return nil }
+            guard let info = decide(text) else { return nil }
             captured = (text, info.text, info.targetLayoutID)
             return info.text
         }
@@ -197,7 +202,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         DispatchQueue.main.asyncAfter(deadline: .now() + autoCorrectSettleDelay) { [weak self] in
             defer { self?.autoCorrectInFlight = false }
             guard let self else { return }
-            guard let corrected = self.convertWordLeftOfCursor() else { return }
+            guard let corrected = self.convertWordLeftOfCursor(using: { [weak self] text in
+                self?.textConverter.autoCorrectWord(text)
+            }) else { return }
             NSLog("[LangSwitcher] performSpaceAutoCorrection: '\(corrected.input)' → '\(corrected.output)'")
             self.settingsManager.incrementConversionCount()
             self.logConversion(input: corrected.input, output: corrected.output, mode: "autoSpace")
