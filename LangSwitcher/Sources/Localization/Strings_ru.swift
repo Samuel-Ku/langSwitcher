@@ -31,6 +31,8 @@ enum Strings_ru {
         "general.playSound":             "Звук при конвертации",
         "general.showNotifications":     "Показывать уведомления",
         "general.smartConversion":       "Умная конвертация (без выделения)",
+        "general.autoCorrectOnSpace":      "Автокоррекция по пробелу",
+        "general.autoCorrectOnSpaceHint":  "Автоматически конвертировать последнее слово при нажатии пробела, если оно выглядит набранным в другой раскладке.",
         "general.mode":                  "Режим:",
         "general.layoutSwitch":          "Переключение раскладки после конвертации",
         "general.howItWorks":            "Как это работает",

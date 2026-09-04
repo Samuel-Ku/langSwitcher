@@ -32,6 +32,8 @@ enum Strings_en {
         "general.playSound":             "Play Sound on Conversion",
         "general.showNotifications":     "Show Notifications",
         "general.smartConversion":       "Smart Conversion (No Selection)",
+        "general.autoCorrectOnSpace":      "Auto-correct on Space",
+        "general.autoCorrectOnSpaceHint":  "Automatically convert the last word when you press Space, if it looks like the wrong layout.",
         "general.mode":                  "Mode:",
         "general.layoutSwitch":          "Layout Switch after Conversion",
         "general.howItWorks":            "How It Works",

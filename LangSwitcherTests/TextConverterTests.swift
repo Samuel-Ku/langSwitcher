@@ -311,4 +311,42 @@ final class TextConverterTests: XCTestCase {
         XCTAssertEqual(boundary?.keep, "")
         XCTAssertEqual(boundary?.convert, "ghbdtn rfr ltkf 123")
     }
+    
+    // MARK: - convertIfWrongLayout (Issue #4: automatic correction on Space)
+    //
+    // Decision for the Space flow: convert the word left of the cursor
+    // only if it looks like the wrong layout, otherwise abstain (nil).
+    
+    func testConvertIfWrongLayout_WrongLatin() {
+        let info = converter.convertIfWrongLayout("ghbdtn")
+        XCTAssertNotNil(info)
+        XCTAssertEqual(info?.text, "привет")
+        XCTAssertNotNil(info?.targetLayoutID)
+    }
+    
+    func testConvertIfWrongLayout_WrongCyrillic() {
+        let info = converter.convertIfWrongLayout("руддщ")
+        XCTAssertNotNil(info)
+        XCTAssertEqual(info?.text, "hello")
+    }
+    
+    func testConvertIfWrongLayout_TrailingSpace() {
+        // Shape the Space flow depends on: the selection grabbed after Space
+        // lands includes the trailing space; conversion must preserve it.
+        let info = converter.convertIfWrongLayout("ghbdtn ")
+        XCTAssertNotNil(info)
+        XCTAssertEqual(info?.text, "привет ")
+    }
+    
+    func testConvertIfWrongLayout_NumbersAbstain() {
+        XCTAssertNil(converter.convertIfWrongLayout("12345"))
+    }
+    
+    func testConvertIfWrongLayout_EmptyAbstains() {
+        XCTAssertNil(converter.convertIfWrongLayout(""))
+    }
+    
+    func testConvertIfWrongLayout_WhitespaceAbstains() {
+        XCTAssertNil(converter.convertIfWrongLayout("   "))
+    }
 }

@@ -70,6 +70,19 @@ final class TextConverter {
         return LayoutMapper.convert(text: text, from: sourceID, to: targetID)
     }
     
+    /// Decide whether a word needs automatic correction (Issue #4).
+    /// Returns the conversion if and only if the text looks like it was
+    /// typed in the wrong layout; otherwise returns nil (abstain).
+    /// Used by the Space auto-correction flow and the Last Word
+    /// smart-conversion mode.
+    func convertIfWrongLayout(_ text: String) -> ConversionResult? {
+        guard looksLikeWrongLayout(text) else {
+            NSLog("[LangSwitcher] convertIfWrongLayout: abstaining for '\(text)'")
+            return nil
+        }
+        return convertSelectedTextWithInfo(text)
+    }
+    
     /// Check if text looks like it was typed in the wrong keyboard layout.
     /// For example, "ghbdtn" typed on QWERTY when meaning "привет" on Russian layout.
     /// We check: if converting the text to another layout produces something more "readable".

@@ -94,6 +94,11 @@ struct GeneralSettingsTab: View {
                 Toggle(l10n.t("general.launchAtLogin"), isOn: $settingsManager.launchAtLogin)
                 Toggle(l10n.t("general.playSound"), isOn: $settingsManager.playSounds)
                 Toggle(l10n.t("general.showNotifications"), isOn: $settingsManager.showNotifications)
+                Toggle(l10n.t("general.autoCorrectOnSpace"), isOn: $settingsManager.autoCorrectOnSpace)
+                
+                Text(l10n.t("general.autoCorrectOnSpaceHint"))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
             
             Section(l10n.t("general.smartConversion")) {

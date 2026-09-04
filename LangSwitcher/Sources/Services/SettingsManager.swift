@@ -126,6 +126,17 @@ final class SettingsManager: ObservableObject {
         didSet { defaults.set(loggingEnabled, forKey: Keys.loggingEnabled) }
     }
     
+    /// Automatically convert the last word when Space is pressed,
+    /// if it looks like the wrong layout (Issue #4). Default: OFF —
+    /// rewriting text unprompted must be opt-in. Posts the hotkey
+    /// notification so AppDelegate re-registers the Space monitor.
+    @Published var autoCorrectOnSpace: Bool {
+        didSet {
+            defaults.set(autoCorrectOnSpace, forKey: Keys.autoCorrectOnSpace)
+            NotificationCenter.default.post(name: .hotkeySettingsChanged, object: nil)
+        }
+    }
+    
     /// Max number of log entries to keep. 0 = unlimited. Default: 100.
     @Published var logMaxEntries: Int {
         didSet { defaults.set(logMaxEntries, forKey: Keys.logMaxEntries) }
@@ -162,6 +173,7 @@ final class SettingsManager: ObservableObject {
         static let conversionCount = "conversionCount"
         static let loggingEnabled = "loggingEnabled"
         static let logMaxEntries = "logMaxEntries"
+        static let autoCorrectOnSpace = "autoCorrectOnSpace"
     }
     
     // MARK: - Init
@@ -190,6 +202,7 @@ final class SettingsManager: ObservableObject {
         self.conversionCount = defaults.integer(forKey: Keys.conversionCount)
         self.loggingEnabled = defaults.object(forKey: Keys.loggingEnabled) as? Bool ?? false  // Default: OFF
         self.logMaxEntries = defaults.object(forKey: Keys.logMaxEntries) as? Int ?? 100       // Default: 100
+        self.autoCorrectOnSpace = defaults.object(forKey: Keys.autoCorrectOnSpace) as? Bool ?? false  // Default: OFF
         
         // Load layouts
         if let data = defaults.data(forKey: Keys.enabledLayouts),

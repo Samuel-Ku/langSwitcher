@@ -16,6 +16,14 @@ final class HotkeyManager {
     private var flagsGlobalMonitor: Any?
     private var flagsLocalMonitor: Any?
     
+    // Space monitoring for automatic correction on Space (Issue #4)
+    private var spaceAction: HotkeyAction?
+    private var spaceGlobalMonitor: Any?
+    private var spaceLocalMonitor: Any?
+    
+    /// Plain Space keycode on Apple keyboards
+    static let spaceKeyCode: UInt16 = 0x31
+    
     // Double-tap detection state
     private var lastShiftPressTime: TimeInterval = 0
     private var lastShiftWasRight: Bool? = nil
@@ -128,10 +136,64 @@ final class HotkeyManager {
         if let m = localMonitor { NSEvent.removeMonitor(m); localMonitor = nil }
         if let m = flagsGlobalMonitor { NSEvent.removeMonitor(m); flagsGlobalMonitor = nil }
         if let m = flagsLocalMonitor { NSEvent.removeMonitor(m); flagsLocalMonitor = nil }
+        stopSpaceMonitor()
         action = nil
         isDoubleShiftMode = false
         lastShiftPressTime = 0
         shiftWasAloneDown = false
+    }
+    
+    // MARK: - Space Monitoring (Issue #4)
+    
+    /// Pure predicate: is this key event a plain word-separating Space?
+    /// Excludes modified Spaces (⌘Space = Spotlight, ⌥Space = non-breaking
+    /// space, ⌃Space = input switcher) and key-repeat events from held Space.
+    /// Shift+Space still counts — it inserts a word separator in most apps.
+    static func isPlainSpaceEvent(
+        keyCode: UInt16,
+        modifierFlags: NSEvent.ModifierFlags,
+        isRepeat: Bool
+    ) -> Bool {
+        guard keyCode == spaceKeyCode, !isRepeat else { return false }
+        let mods = modifierFlags.intersection(.deviceIndependentFlagsMask)
+        return mods.intersection([.command, .option, .control]).isEmpty
+    }
+    
+    /// Monitor plain Space presses (global + local) without swallowing them.
+    /// Stopped by unregister() together with the hotkey monitors —
+    /// AppDelegate re-registers it after every register() call when enabled.
+    func registerSpaceMonitor(action: @escaping HotkeyAction) {
+        stopSpaceMonitor()
+        self.spaceAction = action
+        
+        spaceGlobalMonitor = NSEvent.addGlobalMonitorForEvents(matching: .keyDown) { [weak self] event in
+            guard let self else { return }
+            if Self.isPlainSpaceEvent(
+                keyCode: event.keyCode,
+                modifierFlags: event.modifierFlags,
+                isRepeat: event.isARepeat
+            ) {
+                self.spaceAction?()
+            }
+        }
+        
+        spaceLocalMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
+            if let self, Self.isPlainSpaceEvent(
+                keyCode: event.keyCode,
+                modifierFlags: event.modifierFlags,
+                isRepeat: event.isARepeat
+            ) {
+                self.spaceAction?()
+            }
+            return event
+        }
+    }
+    
+    /// Stop Space monitoring
+    func stopSpaceMonitor() {
+        if let m = spaceGlobalMonitor { NSEvent.removeMonitor(m); spaceGlobalMonitor = nil }
+        if let m = spaceLocalMonitor { NSEvent.removeMonitor(m); spaceLocalMonitor = nil }
+        spaceAction = nil
     }
     
     // MARK: - Display Helpers

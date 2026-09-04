@@ -67,6 +67,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 }
             }
         }
+        
+        // Automatic correction on Space (Issue #4) — re-registered together
+        // with the hotkey because register*() calls reset all monitors.
+        if settingsManager.autoCorrectOnSpace {
+            hotkeyManager.registerSpaceMonitor { [weak self] in
+                Task { @MainActor in
+                    self?.performSpaceAutoCorrection()
+                }
+            }
+        } else {
+            hotkeyManager.stopSpaceMonitor()
+        }
     }
     
     @objc private func hotkeySettingsChanged() {
@@ -141,30 +153,55 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     
     /// Last Word mode: select one word left, convert if it looks wrong
     private func performLastWordConversion() {
-        var capturedInput: String?
-        var capturedOutput: String?
-        var capturedTargetLayout: String?
+        guard let corrected = convertWordLeftOfCursor() else { return }
+        settingsManager.incrementConversionCount()
+        logConversion(input: corrected.input, output: corrected.output, mode: "lastWord")
+        switchLayoutIfNeeded(targetLayoutID: corrected.targetLayoutID, conversionOccurred: true)
+        playFeedback()
+        showConversionNotification(input: corrected.input, output: corrected.output)
+    }
+    
+    /// Shared core for word-left-of-cursor flows: select one word left and
+    /// convert it if and only if it looks like the wrong layout.
+    /// Returns the input/output pair plus target layout, or nil if abstained.
+    private func convertWordLeftOfCursor() -> (input: String, output: String, targetLayoutID: String?)? {
+        var captured: (input: String, output: String, targetLayoutID: String?)?
         let success = accessibilityService.selectAndReplaceLastWord { [weak self] (text: String) -> String? in
-            guard let self = self else { return nil }
-            NSLog("[LangSwitcher] lastWord got: '\(text)'")
-            
-            if self.textConverter.looksLikeWrongLayout(text) {
-                capturedInput = text
-                if let info = self.textConverter.convertSelectedTextWithInfo(text) {
-                    capturedOutput = info.text
-                    capturedTargetLayout = info.targetLayoutID
-                    return info.text
-                }
-            }
-            return nil
+            NSLog("[LangSwitcher] convertWordLeftOfCursor got: '\(text)'")
+            guard let info = self?.textConverter.convertIfWrongLayout(text) else { return nil }
+            captured = (text, info.text, info.targetLayoutID)
+            return info.text
         }
+        guard success, let corrected = captured else { return nil }
+        return corrected
+    }
+    
+    /// Automatic correction on Space (Issue #4): after a plain Space lands,
+    /// convert the word left of the cursor if it looks like the wrong layout.
+    /// Silent by design — no sound or notification per keystroke; the changed
+    /// word itself is the confirmation. Undo arrives with Issue #7.
+    private var autoCorrectInFlight = false
+    
+    /// Delay letting the Space keystroke land in the target app before selecting
+    private let autoCorrectSettleDelay: TimeInterval = 0.15
+    
+    func performSpaceAutoCorrection() {
+        guard settingsManager.autoCorrectOnSpace else { return }
+        // Never steal Spaces typed in our own windows (Settings search etc.)
+        guard !NSApp.isActive else { return }
+        // Drop overlapping triggers while a correction is running
+        guard !autoCorrectInFlight else { return }
+        autoCorrectInFlight = true
         
-        if success {
-            settingsManager.incrementConversionCount()
-            logConversion(input: capturedInput, output: capturedOutput, mode: "lastWord")
-            switchLayoutIfNeeded(targetLayoutID: capturedTargetLayout, conversionOccurred: true)
-            playFeedback()
-            showConversionNotification(input: capturedInput, output: capturedOutput)
+        // Let the Space keystroke land in the target app before selecting
+        DispatchQueue.main.asyncAfter(deadline: .now() + autoCorrectSettleDelay) { [weak self] in
+            defer { self?.autoCorrectInFlight = false }
+            guard let self else { return }
+            guard let corrected = self.convertWordLeftOfCursor() else { return }
+            NSLog("[LangSwitcher] performSpaceAutoCorrection: '\(corrected.input)' → '\(corrected.output)'")
+            self.settingsManager.incrementConversionCount()
+            self.logConversion(input: corrected.input, output: corrected.output, mode: "autoSpace")
+            self.switchLayoutIfNeeded(targetLayoutID: corrected.targetLayoutID, conversionOccurred: true)
         }
     }
     
