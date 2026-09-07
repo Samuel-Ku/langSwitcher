@@ -52,7 +52,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     
     func registerHotkey() {
         if settingsManager.useDoubleShift {
-            hotkeyManager.registerDoubleShift { [weak self] in
+            hotkeyManager.registerDoubleTap(modifier: settingsManager.doubleTapModifier) { [weak self] in
                 Task { @MainActor in
                     self?.performConversion()
                 }

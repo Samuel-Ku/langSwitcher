@@ -55,6 +55,15 @@ enum LayoutSwitchMode: Int, CaseIterable, Codable {
     }
 }
 
+// MARK: - Hotkey Mode (UI-facing)
+/// Which shortcut style triggers conversion (Issue #7)
+
+enum DoubleTapHotkeyMode: Int, CaseIterable {
+    case doubleShift = 0
+    case doubleOption = 1
+    case custom = 2
+}
+
 // MARK: - Settings Manager
 // Persists user preferences via UserDefaults
 
@@ -71,10 +80,19 @@ final class SettingsManager: ObservableObject {
         didSet { saveLayouts() }
     }
     
-    /// true = double-shift mode, false = regular modifier+key hotkey
+    /// true = double-tap modifier mode (double Shift / double Option), false = regular modifier+key hotkey
     @Published var useDoubleShift: Bool {
         didSet {
             defaults.set(useDoubleShift, forKey: Keys.useDoubleShift)
+            NotificationCenter.default.post(name: .hotkeySettingsChanged, object: nil)
+        }
+    }
+    
+    /// Which modifier double-tap triggers conversion: ⇧⇧ or ⌥⌥ (Issue #7).
+    /// Only meaningful when `useDoubleShift` is true.
+    @Published var doubleTapModifier: DoubleTapModifier {
+        didSet {
+            defaults.set(doubleTapModifier.rawValue, forKey: Keys.doubleTapModifier)
             NotificationCenter.default.post(name: .hotkeySettingsChanged, object: nil)
         }
     }
@@ -144,6 +162,28 @@ final class SettingsManager: ObservableObject {
     
     // MARK: - Computed
     
+    /// UI-facing hotkey mode (Issue #7): ⇧⇧ / ⌥⌥ / custom shortcut.
+    /// Writes to `useDoubleShift` + `doubleTapModifier` so the stored
+    /// preference format stays backward compatible.
+    var doubleTapHotkeyMode: DoubleTapHotkeyMode {
+        get {
+            guard useDoubleShift else { return .custom }
+            return doubleTapModifier == .shift ? .doubleShift : .doubleOption
+        }
+        set {
+            switch newValue {
+            case .doubleShift:
+                useDoubleShift = true
+                doubleTapModifier = .shift
+            case .doubleOption:
+                useDoubleShift = true
+                doubleTapModifier = .option
+            case .custom:
+                useDoubleShift = false
+            }
+        }
+    }
+    
     var hotkeyModifierFlags: NSEvent.ModifierFlags {
         get { NSEvent.ModifierFlags(rawValue: hotkeyModifiers) }
         set { hotkeyModifiers = newValue.rawValue }
@@ -151,7 +191,7 @@ final class SettingsManager: ObservableObject {
     
     var hotkeyDescription: String {
         if useDoubleShift {
-            return "⇧⇧ (Double Shift)"
+            return doubleTapModifier.displayString
         }
         let mods = HotkeyManager.modifierFlagsToString(hotkeyModifierFlags)
         let key = HotkeyManager.keyCodeToString(hotkeyKeyCode)
@@ -163,6 +203,7 @@ final class SettingsManager: ObservableObject {
     private enum Keys {
         static let enabledLayouts = "enabledLayouts"
         static let useDoubleShift = "useDoubleShift"
+        static let doubleTapModifier = "doubleTapModifier"
         static let hotkeyKeyCode = "hotkeyKeyCode"
         static let hotkeyModifiers = "hotkeyModifiers"
         static let launchAtLogin = "launchAtLogin"
@@ -182,6 +223,11 @@ final class SettingsManager: ObservableObject {
         // Default: double-shift mode
         let savedUseDoubleShift = defaults.object(forKey: Keys.useDoubleShift) as? Bool
         self.useDoubleShift = savedUseDoubleShift ?? true  // Default ON
+        
+        // Which modifier to double-tap (Issue #7). Backward-compatible:
+        // missing key → Shift (the historical behavior).
+        let savedDoubleTapModifier = defaults.object(forKey: Keys.doubleTapModifier) as? Int
+        self.doubleTapModifier = DoubleTapModifier(rawValue: savedDoubleTapModifier ?? 0) ?? .shift
         
         // Fallback hotkey settings (Option+S) for regular mode
         let savedKeyCode = defaults.object(forKey: Keys.hotkeyKeyCode) as? Int

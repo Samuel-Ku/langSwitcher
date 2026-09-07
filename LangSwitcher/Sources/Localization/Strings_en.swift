@@ -67,8 +67,12 @@ enum Strings_en {
         "hotkey.title":                  "Keyboard Shortcut",
         "hotkey.description":            "Press this shortcut to convert text. If text is selected it converts the selection; otherwise it auto-selects the last word.",
         "hotkey.current":                "Current shortcut:",
-        "hotkey.useDoubleShift":         "Use Double Shift (⇧⇧) as shortcut",
+        "hotkey.useDoubleShift":         "Double-tap shortcut",
+        "hotkey.doubleShiftMode":        "Double Shift (⇧⇧)",
+        "hotkey.doubleOptionMode":       "Double Option (⌥⌥)",
+        "hotkey.customMode":             "Custom Shortcut",
         "hotkey.doubleShiftHint":        "Quickly press Shift twice to trigger conversion. This is the recommended shortcut — fast and doesn't conflict with other apps.",
+        "hotkey.doubleOptionHint":       "Quickly press Option twice to trigger conversion. Option+key shortcuts (⌥+key) are ignored and won't trigger conversion.",
         "hotkey.customTitle":            "Custom Shortcut",
 
         // ── Hotkey Recorder ─────────────────────────────────────────

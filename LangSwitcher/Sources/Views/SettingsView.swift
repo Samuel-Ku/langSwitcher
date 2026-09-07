@@ -269,15 +269,28 @@ struct HotkeySettingsTab: View {
             
             Divider()
             
-            // Double Shift toggle
-            Toggle(l10n.t("hotkey.useDoubleShift"), isOn: $settingsManager.useDoubleShift)
-                .toggleStyle(.switch)
+            // Double-tap modifier choice (Issue #7): ⇧⇧ / ⌥⌥ / custom shortcut
+            Picker(l10n.t("hotkey.useDoubleShift"), selection: $settingsManager.doubleTapHotkeyMode) {
+                Text(l10n.t("hotkey.doubleShiftMode")).tag(DoubleTapHotkeyMode.doubleShift)
+                Text(l10n.t("hotkey.doubleOptionMode")).tag(DoubleTapHotkeyMode.doubleOption)
+                Text(l10n.t("hotkey.customMode")).tag(DoubleTapHotkeyMode.custom)
+            }
+            .pickerStyle(.radioGroup)
             
-            Text(l10n.t("hotkey.doubleShiftHint"))
-                .font(.caption)
-                .foregroundStyle(.secondary)
+            switch settingsManager.doubleTapHotkeyMode {
+            case .doubleShift:
+                Text(l10n.t("hotkey.doubleShiftHint"))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            case .doubleOption:
+                Text(l10n.t("hotkey.doubleOptionHint"))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            case .custom:
+                EmptyView()
+            }
             
-            if !settingsManager.useDoubleShift {
+            if settingsManager.doubleTapHotkeyMode == .custom {
                 Divider()
                 
                 Text(l10n.t("hotkey.customTitle"))

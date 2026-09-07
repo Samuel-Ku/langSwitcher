@@ -35,7 +35,7 @@ https://github.com/reg2005/langSwitcher/raw/main/screenshots/langSwitch.mp4
   - **Disabled** — only works with explicit text selection
 - **Auto-detection** — automatically detects which layout the text was typed in
 - **System keyboard integration** — uses your installed system keyboard layouts
-- **Double Shift hotkey** — press `⇧⇧` (Shift twice quickly) to convert, or set a custom shortcut
+- **Double Shift / Double Option hotkey** — press `⇧⇧` or `⌥⌥` (modifier twice quickly) to convert, or set a custom shortcut
 - **Conversion Log** — optionally log conversions to a local SQLite database (disabled by default for privacy). Review and label entries (correct/incorrect) for future ML training
 - **JSON export** — export conversion logs for data analysis or model training
 - **Menu bar app** — lives quietly in your status bar, always ready
@@ -50,7 +50,7 @@ https://github.com/reg2005/langSwitcher/raw/main/screenshots/langSwitch.mp4
 ```
 1. You type "ghbdtn" (meant to type "привет" but had English layout active)
 2. Select the mistyped text (or just press the hotkey — Smart Conversion handles it)
-3. Press ⇧⇧ (double Shift)
+3. Press ⇧⇧ (double Shift) or ⌥⌥ (double Option)
 4. Text is replaced with "привет"
 ```
 
@@ -118,7 +118,7 @@ Or open `LangSwitcher.xcodeproj` in Xcode and press `⌘R`.
 
 1. **Type text** in any application
 2. **Realize** you had the wrong keyboard layout active
-3. **Press** `⇧⇧` (double Shift) — Smart Conversion auto-selects and converts
+3. **Press** `⇧⇧` (double Shift) or `⌥⌥` (double Option) — Smart Conversion auto-selects and converts
 4. Or **select** the mistyped text manually, then press the hotkey
 5. The text is **instantly converted** to the correct layout
 
@@ -148,7 +148,7 @@ Access settings from the menu bar icon -> **Settings** (or `⌘,`):
 |-----|-------------|
 | **General** | Launch at login, sounds, notifications, Smart Conversion mode, Layout Switch mode |
 | **Layouts** | View and refresh detected keyboard layouts |
-| **Hotkey** | Toggle double-shift or record a custom shortcut |
+| **Hotkey** | Choose double Shift ⇧⇧, double Option ⌥⌥, or record a custom shortcut |
 | **Permissions** | Check and grant Accessibility access |
 | **Log** | View conversion history, label entries as correct/incorrect, export to JSON |
 
