@@ -57,7 +57,7 @@ LangSwitcher uses a custom runtime localization system (NOT Apple `.lproj`/`.str
 
 1. **All new user-facing strings** must use `LocalizationManager.shared.t("key")` — never hardcode UI text.
 2. **String keys use namespace prefixes**: `menu.*`, `settings.*`, `general.*`, `smartMode.*`, `layoutSwitchMode.*`, `layouts.*`, `hotkey.*`, `hotkeyRecorder.*`, `permissions.*`, `log.*`, `about.*`, `alert.*`, `common.*`.
-3. **When adding a new string key**: Add it to **both** `Strings_en.swift` and `Strings_ru.swift` (and any other `Strings_xx.swift` files).
+3. **When adding a new string key**: Add it to **all** `Strings_xx.swift` files (`Strings_en.swift`, `Strings_ru.swift`, `Strings_pl.swift`, `Strings_ua.swift`, and any others).
 4. **`LocalizationManager` is `@MainActor`** — it is used as `@EnvironmentObject` in SwiftUI views. Any code that calls `LocalizationManager.shared.t()` must run on the main actor.
 5. **Enum computed properties** (e.g. `SmartConversionMode.displayName`) that call `t()` must be annotated with `@MainActor`.
 6. **Adding a new language**: Copy `Strings_en.swift` → `Strings_xx.swift`, translate values, register in `LangSwitcherApp.swift`, add to `availableLanguages` in `LocalizationManager.swift`, add to `project.pbxproj`. See README for detailed steps.
@@ -68,8 +68,10 @@ LangSwitcher uses a custom runtime localization system (NOT Apple `.lproj`/`.str
 ```
 LangSwitcher/Sources/Localization/
 ├── LocalizationManager.swift   # ObservableObject, t() lookup, language persistence
-├── Strings_en.swift            # English strings (~113 keys)
-└── Strings_ru.swift            # Russian translations
+├── Strings_en.swift            # English strings (base)
+├── Strings_ru.swift            # Russian translations
+├── Strings_pl.swift            # Polish translations
+└── Strings_ua.swift            # Ukrainian translations
 ```
 
 ## Agent skills

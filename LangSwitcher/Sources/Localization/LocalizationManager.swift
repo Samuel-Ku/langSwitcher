@@ -14,6 +14,8 @@ final class LocalizationManager: ObservableObject {
     static let availableLanguages: [(code: String, name: String)] = [
         ("en", "English"),
         ("ru", "Русский"),
+        ("pl", "Polski"),
+        ("ua", "Українська"),
     ]
 
     /// Currently active language code
@@ -34,12 +36,14 @@ final class LocalizationManager: ObservableObject {
            Self.availableLanguages.contains(where: { $0.code == saved }) {
             self.currentLanguage = saved
         } else {
-            // Auto-detect: check preferred languages for "ru"
-            let preferred = Locale.preferredLanguages // e.g. ["ru-RU", "en-US"]
-            let isRussian = preferred.first(where: {
-                $0.lowercased().hasPrefix("ru")
-            }) != nil
-            self.currentLanguage = isRussian ? "ru" : "en"
+            // Auto-detect: match the user's preferred languages (first hit wins)
+            let preferred = Locale.preferredLanguages // e.g. ["uk-UA", "en-US"]
+            let detected = Self.availableLanguages.first { lang in
+                preferred.contains(where: {
+                    $0.lowercased().hasPrefix(lang.code)
+                })
+            }?.code ?? "en"
+            self.currentLanguage = detected
             // Persist the initial choice
             UserDefaults.standard.set(self.currentLanguage, forKey: "appLanguage")
         }

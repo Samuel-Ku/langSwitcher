@@ -28,6 +28,8 @@
 		E10000010000000000000019 /* LocalizationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10000020000000000000019 /* LocalizationManager.swift */; };
 		E10000010000000000000020 /* Strings_en.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10000020000000000000020 /* Strings_en.swift */; };
 		E10000010000000000000021 /* Strings_ru.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10000020000000000000021 /* Strings_ru.swift */; };
+		E10000010000000000000027 /* Strings_pl.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10000020000000000000027 /* Strings_pl.swift */; };
+		E10000010000000000000028 /* Strings_ua.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10000020000000000000028 /* Strings_ua.swift */; };
 		E10000010000000000000022 /* AutoCorrectionGate.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10000020000000000000022 /* AutoCorrectionGate.swift */; };
 		E10000010000000000000023 /* DoubleTapDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10000020000000000000023 /* DoubleTapDetector.swift */; };
 		E10000010000000000000024 /* PermissionMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10000020000000000000024 /* PermissionMonitor.swift */; };
@@ -73,6 +75,8 @@
 		E10000020000000000000019 /* LocalizationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalizationManager.swift; sourceTree = "<group>"; };
 		E10000020000000000000020 /* Strings_en.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Strings_en.swift; sourceTree = "<group>"; };
 		E10000020000000000000021 /* Strings_ru.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Strings_ru.swift; sourceTree = "<group>"; };
+		E10000020000000000000027 /* Strings_pl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Strings_pl.swift; sourceTree = "<group>"; };
+		E10000020000000000000028 /* Strings_ua.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Strings_ua.swift; sourceTree = "<group>"; };
 		E10000020000000000000022 /* AutoCorrectionGate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoCorrectionGate.swift; sourceTree = "<group>"; };
 		E10000020000000000000023 /* DoubleTapDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DoubleTapDetector.swift; sourceTree = "<group>"; };
 		E10000020000000000000024 /* PermissionMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionMonitor.swift; sourceTree = "<group>"; };
@@ -196,6 +200,8 @@
 				E10000020000000000000019 /* LocalizationManager.swift */,
 				E10000020000000000000020 /* Strings_en.swift */,
 				E10000020000000000000021 /* Strings_ru.swift */,
+				E10000020000000000000027 /* Strings_pl.swift */,
+				E10000020000000000000028 /* Strings_ua.swift */,
 			);
 			path = Localization;
 			sourceTree = "<group>";
@@ -349,6 +355,8 @@
 				E10000010000000000000019 /* LocalizationManager.swift in Sources */,
 				E10000010000000000000020 /* Strings_en.swift in Sources */,
 				E10000010000000000000021 /* Strings_ru.swift in Sources */,
+				E10000010000000000000027 /* Strings_pl.swift in Sources */,
+				E10000010000000000000028 /* Strings_ua.swift in Sources */,
 				E10000010000000000000022 /* AutoCorrectionGate.swift in Sources */,
 				E10000010000000000000023 /* DoubleTapDetector.swift in Sources */,
 				E10000010000000000000024 /* PermissionMonitor.swift in Sources */,

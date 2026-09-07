@@ -272,7 +272,7 @@ LangSwitcher/
 | **Гарячі клавіші** | NSEvent глобальний монітор + CGEvent |
 | **Налаштування** | UserDefaults |
 | **Журнал конвертацій** | SQLite3 (C API, без залежностей) |
-| **Локалізація** | Власний runtime i18n (англійська, російська) |
+| **Локалізація** | Власний runtime i18n (англійська, російська, польська, українська) |
 | **CI/CD** | GitHub Actions |
 | **Дистрибуція** | DMG (Intel + ARM + Universal) через GitHub Releases |
 | **Вебсайт** | GitHub Pages |
@@ -343,6 +343,8 @@ LangSwitcher використовує власну систему локаліз
    private func initializeLocalization() {
        Strings_en.register()
        Strings_ru.register()
+       Strings_pl.register()
+       Strings_ua.register()
        Strings_xx.register()  // <-- додайте це
    }
    ```
@@ -352,6 +354,8 @@ LangSwitcher використовує власну систему локаліз
    let availableLanguages: [(code: String, name: String)] = [
        ("en", "English"),
        ("ru", "Русский"),
+       ("pl", "Polski"),
+       ("ua", "Українська"),
        ("xx", "Ваша мова"),  // <-- додайте це
    ]
    ```

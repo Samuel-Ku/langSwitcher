@@ -272,7 +272,7 @@ Input: "ghbdtn" (typed on US layout when Russian was intended)
 | **Hotkey** | NSEvent global monitor + CGEvent |
 | **Settings** | UserDefaults |
 | **Conversion Log** | SQLite3 (C API, no dependencies) |
-| **Localization** | Custom runtime i18n (English, Russian) |
+| **Localization** | Custom runtime i18n (English, Russian, Polish, Ukrainian) |
 | **CI/CD** | GitHub Actions |
 | **Distribution** | DMG (Intel + ARM + Universal) via GitHub Releases |
 | **Website** | GitHub Pages |
@@ -343,6 +343,8 @@ LangSwitcher uses a custom localization system — no `.lproj` / `.strings` file
    private func initializeLocalization() {
        Strings_en.register()
        Strings_ru.register()
+       Strings_pl.register()
+       Strings_ua.register()
        Strings_xx.register()  // <-- add this
    }
    ```
@@ -352,6 +354,8 @@ LangSwitcher uses a custom localization system — no `.lproj` / `.strings` file
    let availableLanguages: [(code: String, name: String)] = [
        ("en", "English"),
        ("ru", "Русский"),
+       ("pl", "Polski"),
+       ("ua", "Українська"),
        ("xx", "Your Language"),  // <-- add this
    ]
    ```
