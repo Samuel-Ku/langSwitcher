@@ -35,7 +35,7 @@ final class HotkeyManager {
         unregister()
     }
     
-    // MARK: - Double Shift Registration
+    // MARK: - Double-Tap Registration
     
     /// Register double-tap of a modifier key (Shift ⇧⇧ or Option ⌥⌥) as the hotkey trigger
     func registerDoubleTap(

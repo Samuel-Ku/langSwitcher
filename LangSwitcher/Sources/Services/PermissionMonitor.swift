@@ -50,7 +50,6 @@ final class PermissionMonitor: ObservableObject {
 
     private let pollInterval: TimeInterval
     private var timer: Timer?
-    private var lastLoggedStatus: PermissionStatus?
 
     /// Injectable probe for tests; production default queries the system.
     private let probe: () -> PermissionStatus
