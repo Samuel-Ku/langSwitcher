@@ -86,6 +86,9 @@ enum Strings_ru {
         "permissions.accessibilityTitle":"Доступ к универсальному доступу",
         "permissions.granted":           "Предоставлен — LangSwitcher может конвертировать текст",
         "permissions.notGranted":        "Не предоставлен — включите в Системных настройках",
+        "permissions.inputMonitoringTitle":   "Мониторинг ввода",
+        "permissions.inputMonitoringGranted": "Предоставлен — горячие клавиши работают по всей системе",
+        "permissions.inputMonitoringNotGranted": "Не предоставлен — горячие клавиши могут не срабатывать в других приложениях",
         "permissions.grantAccess":       "Предоставить доступ",
         "permissions.howToEnable":       "Как включить:",
         "permissions.step1":             "1. Откройте Системные настройки > Конфиденциальность > Универсальный доступ",
@@ -93,7 +96,6 @@ enum Strings_ru {
         "permissions.step3":             "3. Включите LangSwitcher в списке",
         "permissions.step4":             "4. При необходимости перезапустите LangSwitcher",
         "permissions.openSettings":      "Открыть Системные настройки",
-        "permissions.refreshStatus":     "Обновить статус",
 
         // ── Вкладка «Журнал конвертаций» ────────────────────────────
         "log.title":                     "Журнал конвертаций",

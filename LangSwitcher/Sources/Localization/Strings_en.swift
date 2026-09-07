@@ -87,6 +87,9 @@ enum Strings_en {
         "permissions.accessibilityTitle":"Accessibility Access",
         "permissions.granted":           "Granted — LangSwitcher can convert text",
         "permissions.notGranted":        "Not granted — Please enable in System Settings",
+        "permissions.inputMonitoringTitle":   "Input Monitoring",
+        "permissions.inputMonitoringGranted": "Granted — conversion hotkeys work system-wide",
+        "permissions.inputMonitoringNotGranted": "Not granted — hotkeys may not fire in other apps",
         "permissions.grantAccess":       "Grant Access",
         "permissions.howToEnable":       "How to enable:",
         "permissions.step1":             "1. Open System Settings > Privacy & Security > Accessibility",
@@ -94,7 +97,6 @@ enum Strings_en {
         "permissions.step3":             "3. Enable LangSwitcher in the list",
         "permissions.step4":             "4. Restart LangSwitcher if needed",
         "permissions.openSettings":      "Open System Settings",
-        "permissions.refreshStatus":     "Refresh Status",
 
         // ── Conversion Log Tab ──────────────────────────────────────
         "log.title":                     "Conversion Log",

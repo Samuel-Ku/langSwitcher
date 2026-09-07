@@ -91,14 +91,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var hasShownPermissionAlert = false
     
     func performConversion() {
-        let hasPerm = AccessibilityService.hasAccessibilityPermission
-        NSLog("[LangSwitcher] performConversion() called, hasAccessibilityPermission=\(hasPerm)")
+        // Conversion is still attempted: CGEvent posting works with only
+        // Input Monitoring granted (⌘C/⌘V round-trip still converts),
+        // and smart conversion simply abstains without AX.
+        let status = PermissionMonitor.systemProbe()
+        NSLog("[LangSwitcher] performConversion() permissions: ax=\(status.accessibilityGranted) im=\(status.inputMonitoringGranted)")
         
-        if !hasPerm {
-            NSLog("[LangSwitcher] AXIsProcessTrusted=false. Will attempt conversion anyway (CGEvent may work with Input Monitoring).")
+        if !status.isFullyGranted {
+            NSLog("[LangSwitcher] Missing permission: \(String(describing: status.firstMissing)). Will attempt conversion anyway (CGEvent may work with Input Monitoring only).")
             if !hasShownPermissionAlert {
                 hasShownPermissionAlert = true
-                NSLog("[LangSwitcher] TIP: If conversion doesn't work, remove the app from Accessibility list in System Settings and re-add it. Also check Input Monitoring.")
+                showAccessibilityAlert()
             }
         }
         
