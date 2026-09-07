@@ -40,6 +40,15 @@ final class PermissionStatusTests: XCTestCase {
         XCTAssertEqual(status.firstMissing, .accessibility)
     }
 
+    func testIsGrantedPerKind() {
+        let status = PermissionStatus(
+            accessibilityGranted: false,
+            inputMonitoringGranted: true
+        )
+        XCTAssertFalse(status.isGranted(.accessibility))
+        XCTAssertTrue(status.isGranted(.inputMonitoring))
+    }
+
     func testEquatable() {
         XCTAssertEqual(
             PermissionStatus(accessibilityGranted: true, inputMonitoringGranted: false),

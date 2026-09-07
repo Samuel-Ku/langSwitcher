@@ -38,12 +38,7 @@ struct PermissionsView: View {
 
     @ViewBuilder
     private func permissionRow(_ kind: PermissionKind) -> some View {
-        let granted: Bool = {
-            switch kind {
-            case .accessibility: return monitor.status.accessibilityGranted
-            case .inputMonitoring: return monitor.status.inputMonitoringGranted
-            }
-        }()
+        let granted = monitor.status.isGranted(kind)
 
         GroupBox {
             HStack {
@@ -52,18 +47,10 @@ struct PermissionsView: View {
                     .font(.title2)
 
                 VStack(alignment: .leading) {
-                    Text(l10n.t(kind == .accessibility
-                        ? "permissions.accessibilityTitle"
-                        : "permissions.inputMonitoringTitle"))
+                    Text(l10n.t(kind.titleKey))
                         .font(.body)
                         .bold()
-                    Text(l10n.t(granted
-                        ? (kind == .accessibility
-                            ? "permissions.granted"
-                            : "permissions.inputMonitoringGranted")
-                        : (kind == .accessibility
-                            ? "permissions.notGranted"
-                            : "permissions.inputMonitoringNotGranted")))
+                    Text(l10n.t(granted ? kind.grantedKey : kind.missingKey))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -110,15 +97,7 @@ struct PermissionsView: View {
     // MARK: - Navigation
 
     private func openSystemSettings(for kind: PermissionKind) {
-        let pane: String = {
-            switch kind {
-            case .accessibility:
-                return "com.apple.preference.security?Privacy_Accessibility"
-            case .inputMonitoring:
-                return "com.apple.preference.security?Privacy_ListenEvent"
-            }
-        }()
-        if let url = URL(string: "x-apple.systempreferences:\(pane)") {
+        if let url = URL(string: "x-apple.systempreferences:\(kind.settingsPane)") {
             NSWorkspace.shared.open(url)
         }
     }

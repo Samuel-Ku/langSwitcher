@@ -15,6 +15,39 @@ enum PermissionKind: CaseIterable {
     case accessibility
     /// Input Monitoring — global NSEvent monitors used for hotkeys.
     case inputMonitoring
+
+    /// Localization key for the permission's display name.
+    var titleKey: String {
+        switch self {
+        case .accessibility: return "permissions.accessibilityTitle"
+        case .inputMonitoring: return "permissions.inputMonitoringTitle"
+        }
+    }
+
+    /// Localization key for the granted-state description.
+    var grantedKey: String {
+        switch self {
+        case .accessibility: return "permissions.granted"
+        case .inputMonitoring: return "permissions.inputMonitoringGranted"
+        }
+    }
+
+    /// Localization key for the not-granted-state description.
+    var missingKey: String {
+        switch self {
+        case .accessibility: return "permissions.notGranted"
+        case .inputMonitoring: return "permissions.inputMonitoringNotGranted"
+        }
+    }
+
+    /// System Settings pane (x-apple.systempreferences URL fragment) that
+    /// hosts this permission's toggle.
+    var settingsPane: String {
+        switch self {
+        case .accessibility: return "com.apple.preference.security?Privacy_Accessibility"
+        case .inputMonitoring: return "com.apple.preference.security?Privacy_ListenEvent"
+        }
+    }
 }
 
 /// Snapshot of both permission grants. Pure value: UI and logging compare
@@ -34,6 +67,14 @@ struct PermissionStatus: Equatable {
         if !accessibilityGranted { return .accessibility }
         if !inputMonitoringGranted { return .inputMonitoring }
         return nil
+    }
+
+    /// Whether the given permission kind is currently granted.
+    func isGranted(_ kind: PermissionKind) -> Bool {
+        switch kind {
+        case .accessibility: return accessibilityGranted
+        case .inputMonitoring: return inputMonitoringGranted
+        }
     }
 }
 
