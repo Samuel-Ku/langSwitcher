@@ -103,11 +103,11 @@ final class HotkeyManagerTests: XCTestCase {
     }
     
     func testCustomIntervalRespected() {
-        let slow = DoubleTapDetector(doubleTapInterval: 0.6)
+        var slow = DoubleTapDetector(doubleTapInterval: 0.6)
         _ = slow.handleModifierDown(.option, at: 10.0)
         XCTAssertTrue(slow.handleModifierDown(.option, at: 10.5))
         
-        let fast = DoubleTapDetector(doubleTapInterval: 0.2)
+        var fast = DoubleTapDetector(doubleTapInterval: 0.2)
         _ = fast.handleModifierDown(.option, at: 10.0)
         XCTAssertFalse(fast.handleModifierDown(.option, at: 10.3))
     }
