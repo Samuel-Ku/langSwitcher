@@ -6,6 +6,7 @@ on:
     tags: [ 'v*' ]
   pull_request:
     branches: [ main ]
+  workflow_dispatch:
 
 # Minimal permissions by default (fixes CodeQL alerts #1-#4)
 permissions:
