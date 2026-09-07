@@ -36,14 +36,22 @@ final class LocalizationManager: ObservableObject {
            Self.availableLanguages.contains(where: { $0.code == saved }) {
             self.currentLanguage = saved
         } else {
-            // Auto-detect: match the user's preferred languages (first hit wins)
+            // Auto-detect: walk the user's preferred languages in order and
+            // take the first one we support. Match on the language subtag
+            // ("uk-UA" -> "uk") so secondary preferences don't shadow the
+            // primary one, and alias macOS's "uk" to our "ua" code.
             let preferred = Locale.preferredLanguages // e.g. ["uk-UA", "en-US"]
-            let detected = Self.availableLanguages.first { lang in
-                preferred.contains(where: {
-                    $0.lowercased().hasPrefix(lang.code)
-                })
-            }?.code ?? "en"
-            self.currentLanguage = detected
+            var detected: String? = nil
+            for localeID in preferred {
+                let lowered = localeID.lowercased()
+                let subtag = lowered.split(separator: "-").first.map(String.init) ?? lowered
+                let code = subtag == "uk" ? "ua" : subtag
+                if Self.availableLanguages.contains(where: { $0.code == code }) {
+                    detected = code
+                    break
+                }
+            }
+            self.currentLanguage = detected ?? "en"
             // Persist the initial choice
             UserDefaults.standard.set(self.currentLanguage, forKey: "appLanguage")
         }
