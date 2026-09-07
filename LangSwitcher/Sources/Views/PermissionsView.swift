@@ -27,11 +27,62 @@ struct PermissionsView: View {
                 howToFix(missing)
             }
 
+            crossAppSection
+
             Spacer()
         }
         .padding()
         .onAppear { monitor.startPolling() }
         .onDisappear { monitor.stopPolling() }
+    }
+
+    // MARK: - Cross-App Verification (Issue #8)
+
+    /// Live view of the frontmost app and how well conversion is expected
+    /// to work there — lets the user tell a permission problem from an
+    /// app limitation. Refreshes with the same poll as the permissions.
+    @ViewBuilder
+    private var crossAppSection: some View {
+        let app = FrontmostAppProbe.current
+
+        GroupBox {
+            VStack(alignment: .leading, spacing: 8) {
+                Text(l10n.t("permissions.crossAppTitle"))
+                    .font(.subheadline)
+                    .bold()
+
+                HStack {
+                    Text(l10n.t("permissions.crossAppFrontmost"))
+                    Spacer()
+                    Text(app.displayName)
+                        .foregroundStyle(.secondary)
+                }
+                .font(.caption)
+
+                if let key = CrossAppVerification.statusKey(for: app.bundleID) {
+                    Label(l10n.t(key), systemImage: appSupportIcon(app.bundleID))
+                        .font(.caption)
+                        .foregroundStyle(appSupportColor(app.bundleID))
+                }
+            }
+            .padding(4)
+        }
+    }
+
+    private func appSupportIcon(_ bundleID: String?) -> String {
+        switch CrossAppVerification.support(for: bundleID) {
+        case .full: return "checkmark.circle"
+        case .limited: return "exclamationmark.triangle"
+        case .unverifiable: return "questionmark.circle"
+        }
+    }
+
+    private func appSupportColor(_ bundleID: String?) -> Color {
+        switch CrossAppVerification.support(for: bundleID) {
+        case .full: return .green
+        case .limited: return .orange
+        case .unverifiable: return .secondary
+        }
     }
 
     // MARK: - Rows
