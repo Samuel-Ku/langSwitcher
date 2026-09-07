@@ -121,8 +121,11 @@ enum LayoutCharacterMap {
     // On Polish Pro each diacritic is a single Option chord on its base key;
     // the only exception is ź on X (ż took Z). Capitals add Shift.
     // Used source-side only: PL diacritic → physical key → target layout char.
-    // The reverse (target-side synthesis) is intentionally unsupported —
-    // diacritic intent is unrecoverable from the base letter.
+    // Target-side synthesis from a plain base letter is intentionally
+    // unsupported (diacritic intent is unrecoverable from the base letter);
+    // Option-chord recovery — the user's ⌥-chords landing as the ACTIVE
+    // layout's own ⌥-layer characters — is a separate path handled by the
+    // Option-layer maps below (see ukrainianOption / polishProOption).
     // Note: for the QWERTZ variant this resolves to QWERTY base keys as an
     // approximation (its dedicated diacritic keys have no public keylayout
     // data to derive exact physical positions from).
@@ -132,6 +135,61 @@ enum LayoutCharacterMap {
         "Ą": "A", "Ć": "C", "Ę": "E", "Ł": "L", "Ń": "N",
         "Ó": "O", "Ś": "S", "Ź": "X", "Ż": "Z",
     ]
+    
+    // Option-layer (⌥) character maps, keyed by the same physical QWERTY key
+    // as the base maps above.
+    //
+    // Why these exist: when the user types Polish text while a Cyrillic layout
+    // is active (the Polish↔Ukrainian working pair), the Polish-diacritic
+    // chords are Option chords — ą=⌥+A, ś=⌥+S, etc. on Polish Pro. Pressing
+    // those same chords on Ukrainian-PC produces Ukrainian-PC's own Option
+    // characters (⌥+A=ƒ, ⌥+S=ы, ⌥+E=ќ …). Those characters land in the text
+    // and a base-layer-only conversion leaves them unmapped — the user sees
+    // „mąka” convert to „mƒkф” instead of „mąka”. Mapping Option characters
+    // by physical key closes that gap: ƒ (⌥+A on Ukrainian-PC) → ą (⌥+A on
+    // Polish Pro). Layer data below was extracted from the real macOS layouts
+    // via UCKeyTranslate.
+    
+    // Ukrainian-PC Option layer — letter keys a–z (real extraction).
+    // Most entries are symbols; the ones that matter for Polish typing are
+    // ƒ(⌥+a) ќ(⌥+e) ы(⌥+s) ў(⌥+o) ∆(⌥+l) ≠(⌥+c) љ(⌥+n) ≈(⌥+x) ђ(⌥+z).
+    static let ukrainianOption: [Character: Character] = [
+        "a": "ƒ", "b": "и", "c": "≠", "d": "ћ", "e": "ќ", "f": "÷", "g": "©",
+        "h": "}", "i": "ѕ", "j": "°", "k": "љ", "l": "∆", "m": "~", "n": "™",
+        "o": "ў", "p": "‘", "q": "ј", "r": "®", "s": "ы", "t": "ё", "u": "ґ",
+        "v": "µ", "w": "џ", "x": "≈", "y": "њ", "z": "ђ",
+    ]
+    
+    // Polish Pro Option-layer diacritics as a forward physical-key map.
+    // Derived from polishDiacriticBases (ą→a inverted to a→ą) so both the
+    // source-side fold and the target-side synthesis share one source of
+    // truth. Covers exactly the 9 canonical diacritics; Polish Pro's other
+    // Option entries are symbols with no role in language text.
+    static let polishProOption: [Character: Character] = {
+        var map: [Character: Character] = [:]
+        for (diacritic, base) in polishDiacriticBases where diacritic.isLowercase {
+            map[base] = diacritic
+        }
+        return map
+    }()
+    
+    // Option-layer maps keyed by layout identifier pattern.
+    // Order matters just like allMaps — specific patterns before general ones.
+    static let optionMaps: [(pattern: String, map: [Character: Character])] = [
+        ("ukrainian", ukrainianOption),
+        ("polishpro", polishProOption),
+    ]
+    
+    /// Get the Option-layer (⌥) character map for a given layout identifier.
+    /// Returns nil when the layout has no Option layer worth converting
+    /// (every other layout's Option layer only holds symbols).
+    static func optionCharacterMap(for layoutID: String) -> [Character: Character]? {
+        let lowered = layoutID.lowercased()
+        for (pattern, map) in optionMaps where lowered.contains(pattern) {
+            return map
+        }
+        return nil
+    }
     
     // Map of layout identifier patterns to their character maps
     // IMPORTANT: Order matters! More specific patterns must come BEFORE less specific ones.

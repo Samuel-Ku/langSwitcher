@@ -499,8 +499,12 @@ final class LayoutMapperTests: XCTestCase {
     // ą=Opt+A, ć=Opt+C, ę=Opt+E, ł=Opt+L, ń=Opt+N, ó=Opt+O, ś=Opt+S,
     // ź=Opt+X (exception — ż took Z), ż=Opt+Z. Capitals add Shift.
     // Conversion folds each diacritic through its physical base key:
-    // PL diacritic → UK letter; UK → PL always yields the BASE letter
-    // (diacritic intent is unrecoverable, so no diacritic synthesis).
+    // PL diacritic → UK letter; UK → PL base letters never synthesize
+    // (diacritic intent on a plain base letter is unrecoverable). The one
+    // exception is Option-chord recovery: when the user typed Polish on a
+    // Cyrillic layout, the chords land as that layout's OWN ⌥-layer
+    // characters and are recovered through physical keys — see the
+    // Option-chord tests below.
     
     func testPolishDiacriticBases_lowercase() {
         let bases = LayoutCharacterMap.polishDiacriticBases
@@ -614,6 +618,104 @@ final class LayoutMapperTests: XCTestCase {
                 to: "com.apple.keylayout.PolishPro"
             ),
             "sx"
+        )
+    }
+    
+    // MARK: - Option-chord recovery (Polish typed on a Cyrillic layout)
+    //
+    // Typing Polish while Ukrainian-PC is active: Polish diacritics are
+    // Option chords on Polish Pro (ą=⌥+A), but the active layout emits its
+    // own ⌥-layer characters for the same chords (⌥+A on Ukrainian-PC = ƒ,
+    // ⌥+E = ќ, ⌥+S = ы, ⌥+N = ™ …). Those land in the text as junk and must
+    // map by physical key to the Polish ⌥-layer output: ƒ→ą, ќ→ę, ™→ń, …
+    
+    func testOptionCharacterMap_ukrainianAndPolishPro() {
+        XCTAssertNotNil(LayoutCharacterMap.optionCharacterMap(for: "com.apple.keylayout.Ukrainian"))
+        XCTAssertNotNil(LayoutCharacterMap.optionCharacterMap(for: "com.apple.keylayout.Ukrainian-PC"))
+        XCTAssertNotNil(LayoutCharacterMap.optionCharacterMap(for: "com.apple.keylayout.PolishPro"))
+        XCTAssertNil(LayoutCharacterMap.optionCharacterMap(for: "com.apple.keylayout.US"),
+                     "Layouts without a convertible Option layer must return nil")
+    }
+    
+    func testConvertUAtoPLPro_restoresAllNinePolishDiacritics() {
+        // Each ⌥-chord on Ukrainian-PC (as-if Polish Pro) → the Polish diacritic
+        // that the same physical key produces on Polish Pro's Option layer.
+        let chords: [(typed: String, expected: String)] = [
+            ("ƒ", "ą"),   // ⌥+a
+            ("≠", "ć"),   // ⌥+c
+            ("ќ", "ę"),   // ⌥+e
+            ("∆", "ł"),   // ⌥+l
+            ("™", "ń"),   // ⌥+n
+            ("ў", "ó"),   // ⌥+o
+            ("ы", "ś"),   // ⌥+s
+            ("≈", "ź"),   // ⌥+x
+            ("ђ", "ż"),   // ⌥+z
+        ]
+        for (typed, expected) in chords {
+            XCTAssertEqual(
+                LayoutMapper.convert(
+                    text: typed,
+                    from: "com.apple.keylayout.Ukrainian",
+                    to: "com.apple.keylayout.PolishPro"
+                ),
+                expected,
+                "'\(typed)' must restore '\(expected)'"
+            )
+        }
+    }
+    
+    func testConvertUAtoPLPro_wordWithDiacritics() {
+        // Polish "mąka" typed on Ukrainian-PC (m→ь, ⌥+a→ƒ, k→л, a→ф)
+        XCTAssertEqual(
+            LayoutMapper.convert(
+                text: "ьƒлф",
+                from: "com.apple.keylayout.Ukrainian",
+                to: "com.apple.keylayout.PolishPro"
+            ),
+            "mąka"
+        )
+        // Polish "cześć" typed on Ukrainian-PC (c→с, z→я, e→у, ⌥+s→ы, ⌥+c→≠)
+        XCTAssertEqual(
+            LayoutMapper.convert(
+                text: "сяуы≠",
+                from: "com.apple.keylayout.Ukrainian",
+                to: "com.apple.keylayout.PolishPro"
+            ),
+            "cześć"
+        )
+    }
+    
+    func testConvertUAtoPLPro_optionChordOnPlainKeyFallsBackToBase() {
+        // љ is Ukrainian-PC ⌥+K; Polish Pro has no language letter on ⌥+K,
+        // so the chord falls back to the base key K → "k" (never junk).
+        XCTAssertEqual(
+            LayoutMapper.convert(
+                text: "љ",
+                from: "com.apple.keylayout.Ukrainian",
+                to: "com.apple.keylayout.PolishPro"
+            ),
+            "k"
+        )
+    }
+    
+    func testConvertUAtoPLPro_reverseDirectionStillFolds() {
+        // Real Polish text converted the other way must NOT ride the Option
+        // path: ą folds through its base key to ф, not to Ukrainian-PC's ⌥+A ƒ.
+        XCTAssertEqual(
+            LayoutMapper.convert(
+                text: "mąka",
+                from: "com.apple.keylayout.PolishPro",
+                to: "com.apple.keylayout.Ukrainian"
+            ),
+            "ьфлф"
+        )
+        XCTAssertEqual(
+            LayoutMapper.convert(
+                text: "cześć",
+                from: "com.apple.keylayout.PolishPro",
+                to: "com.apple.keylayout.Ukrainian"
+            ),
+            "сяуіс"
         )
     }
     

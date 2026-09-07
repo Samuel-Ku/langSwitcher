@@ -42,6 +42,26 @@ final class LayoutMapper {
         // physical base key first. Diacritics are letters, so they always
         // convert (the punctuation rule never fires for them).
         let isPolishSource = sourceLayoutID.lowercased().contains("polish")
+        
+        // Option-chord characters (⌥ layer): a user typing Polish text while a
+        // Cyrillic layout is active presses the Polish-diacritic chords
+        // (ą=⌥+A on Polish Pro), but the active layout emits its OWN ⌥-layer
+        // characters (⌥+A on Ukrainian-PC = ƒ). Those land in the text and
+        // must map by physical key too: reverse source ⌥-layer char → key →
+        // target ⌥-layer char (ƒ → ą). Fall back to the target's base key
+        // when its ⌥-layer has no useful output for that key.
+        //
+        // Branch order matters: the Polish-source fold above comes FIRST.
+        // A foldable diacritic (ą in Polish-source text) is real, correctly
+        // typed text and folds to its base key (ą → ф on Ukrainian) — it must
+        // NOT ride the option path to the target's ⌥-layer (ƒ). Option-layer
+        // chars are only reached when nothing else could explain them: they
+        // are ⌥-chord artifacts from typing one language's chords on another
+        // layout, which is exactly the Ukrainian→Polish recovery case.
+        let sourceOptionMap = LayoutCharacterMap.optionCharacterMap(for: sourceLayoutID) ?? [:]
+        let reverseSourceOption = Dictionary(sourceOptionMap.map { ($0.value, $0.key) }, uniquingKeysWith: { first, _ in first })
+        let targetOptionMap = LayoutCharacterMap.optionCharacterMap(for: targetLayoutID) ?? [:]
+        
         var result = ""
         var unmappedCount = 0
         for char in text {
@@ -58,6 +78,17 @@ final class LayoutMapper {
                       let baseKey = LayoutCharacterMap.polishDiacriticBases[char],
                       let targetChar = targetMap[baseKey] {
                 result.append(targetChar)
+            } else if let optionKey = reverseSourceOption[char] {
+                // ⌥-layer char on the source layout (e.g. ƒ from ⌥+A on
+                // Ukrainian-PC). Prefer the target layout's ⌥-layer letter at
+                // the same physical key (ą); else drop to its base key (a).
+                if let targetOptionChar = targetOptionMap[optionKey], targetOptionChar.isLetter {
+                    result.append(targetOptionChar)
+                } else if let targetBaseChar = targetMap[optionKey] {
+                    result.append(targetBaseChar)
+                } else {
+                    result.append(char)
+                }
             } else {
                 // Character not in mapping (e.g., space, numbers that don't change, emoji)
                 result.append(char)
