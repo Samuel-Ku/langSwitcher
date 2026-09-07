@@ -1,6 +1,6 @@
 # LangSwitcher
 
-[English](README.md) | [Русский](README.ru.md)
+[English](README.md) | [Українська](README.ua.md)
 
 **Open-source keyboard layout text converter for macOS.**
 
