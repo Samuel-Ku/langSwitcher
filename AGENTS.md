@@ -71,3 +71,17 @@ LangSwitcher/Sources/Localization/
 ├── Strings_en.swift            # English strings (~113 keys)
 └── Strings_ru.swift            # Russian translations
 ```
+
+## Agent skills
+
+### Issue tracker
+
+GitHub Issues on the upstream repo `reg2005/langSwitcher` (this clone's `origin` is a fork — always pass `--repo` explicitly). See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Default vocabulary: label strings equal to the five canonical role names. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: root `CONTEXT.md` + `docs/adr/`. See `docs/agents/domain.md`.
