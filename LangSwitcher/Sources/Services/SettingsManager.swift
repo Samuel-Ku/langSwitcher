@@ -145,9 +145,11 @@ final class SettingsManager: ObservableObject {
     }
     
     /// Automatically convert the last word when Space is pressed,
-    /// if it looks like the wrong layout (Issue #4). Default: OFF —
-    /// rewriting text unprompted must be opt-in. Posts the hotkey
-    /// notification so AppDelegate re-registers the Space monitor.
+    /// if it looks like the wrong layout (Issue #4). Default: ON —
+    /// the embedded PL/UA/EN/RU dictionary veto makes it safe: correctly
+    /// typed words are never rewritten, only wrong-layout gibberish is.
+    /// Posts the hotkey notification so AppDelegate re-registers the
+    /// Space monitor.
     @Published var autoCorrectOnSpace: Bool {
         didSet {
             defaults.set(autoCorrectOnSpace, forKey: Keys.autoCorrectOnSpace)
@@ -248,7 +250,7 @@ final class SettingsManager: ObservableObject {
         self.conversionCount = defaults.integer(forKey: Keys.conversionCount)
         self.loggingEnabled = defaults.object(forKey: Keys.loggingEnabled) as? Bool ?? false  // Default: OFF
         self.logMaxEntries = defaults.object(forKey: Keys.logMaxEntries) as? Int ?? 100       // Default: 100
-        self.autoCorrectOnSpace = defaults.object(forKey: Keys.autoCorrectOnSpace) as? Bool ?? false  // Default: OFF
+        self.autoCorrectOnSpace = defaults.object(forKey: Keys.autoCorrectOnSpace) as? Bool ?? true   // Default: ON (dictionary veto makes it safe)
         
         // Load layouts
         if let data = defaults.data(forKey: Keys.enabledLayouts),

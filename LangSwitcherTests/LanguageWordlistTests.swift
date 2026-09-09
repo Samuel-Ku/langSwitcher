@@ -5,9 +5,12 @@ import XCTest
 //
 // The embedded frequency wordlists (WordlistData) back two decisions:
 // 1. VETO — looksLikeWrongLayout must refuse to convert text that is
-//    already correct Polish or Ukrainian (dictionary evidence).
+//    already real language (dictionary evidence). The veto is script-
+//    based: Latin text checks Polish ∪ English, Cyrillic text checks
+//    Ukrainian ∪ Russian — so English/Russian words are protected in
+//    every layout pair.
 // 2. CONFIRM — LanguageWordlists.confirmsConversion recognizes real
-//    Polish/Ukrainian conversion output (primitive for richer scoring).
+//    conversion output (primitive for richer scoring).
 //
 // Regression context: with PolishPro+Ukrainian-PC enabled, the automatic
 // Space flow garbled every correctly typed PL/UA word (cześć → сяуы)
@@ -84,14 +87,54 @@ final class LanguageWordlistTests: XCTestCase {
         XCTAssertFalse(LanguageWordlists.shouldVeto(text: "ghbdtn"))
         XCTAssertFalse(LanguageWordlists.shouldVeto(text: "сяуы"))
         XCTAssertFalse(LanguageWordlists.shouldVeto(text: "руддщ"))
-        XCTAssertFalse(LanguageWordlists.shouldVeto(text: "hello"))
     }
 
-    func testShouldVeto_RussianLeakWordsDoNotVetoUkrainian() {
-        // Regression: "привет"/"когда" leaked into the old Ukrainian list;
-        // now filtered against uk_UA hunspell, they must never veto.
-        XCTAssertFalse(LanguageWordlists.shouldVeto(text: "привет"))
-        XCTAssertFalse(LanguageWordlists.shouldVeto(text: "когда"))
+    // MARK: - English and Russian (script unions)
+    //
+    // The veto is script-based, not layout-based: Latin text checks
+    // Polish ∪ English, Cyrillic text checks Ukrainian ∪ Russian. This is
+    // what makes the default-ON Space auto-correction safe for every
+    // supported layout pair.
+
+    func testShouldVeto_CorrectEnglishWords() {
+        // Single ≥4-letter English words must be protected via the Latin
+        // union (Polish ∪ English).
+        XCTAssertTrue(LanguageWordlists.shouldVeto(text: "hello"))
+        XCTAssertTrue(LanguageWordlists.shouldVeto(text: "world"))
+        XCTAssertTrue(LanguageWordlists.shouldVeto(text: "sorry"))
+    }
+
+    func testShouldVeto_CorrectRussianWords() {
+        // привет/когда live in the RU dictionary list (the old UA-list leak
+        // is fixed); the Cyrillic union protects them as real words.
+        XCTAssertTrue(LanguageWordlists.shouldVeto(text: "привет"))
+        XCTAssertTrue(LanguageWordlists.shouldVeto(text: "когда"))
+        XCTAssertTrue(LanguageWordlists.shouldVeto(text: "тем более"))
+    }
+
+    func testShouldVeto_RussianPhrase() {
+        XCTAssertTrue(LanguageWordlists.shouldVeto(text: "добрий день"))
+    }
+
+    func testConfirmsConversion_EnglishAndRussian() {
+        XCTAssertTrue(LanguageWordlists.confirmsConversion("hello"))
+        XCTAssertTrue(LanguageWordlists.confirmsConversion("привет"))
+        XCTAssertTrue(LanguageWordlists.confirmsConversion("тем более"))
+    }
+
+    func testBestMatch_IdentifiesLanguagePerList() {
+        // Regression: Russian words leaked into the old Ukrainian list.
+        // Per-language lists stay clean (dictionary-filtered), so language
+        // identification is exact — while the VETO deliberately unions all
+        // lists of a script, so "когда"/"привет" still veto as real words.
+        XCTAssertEqual(LanguageWordlists.bestMatch(for: "cześć")?.language, .polish)
+        XCTAssertEqual(LanguageWordlists.bestMatch(for: "привіт")?.language, .ukrainian)
+        XCTAssertEqual(LanguageWordlists.bestMatch(for: "когда")?.language, .russian)
+        XCTAssertNotNil(LanguageWordlists.bestMatch(for: "hello"),
+                        "hello is a real word (it exists in both PL and EN lists)")
+        // Gibberish matches nothing.
+        XCTAssertNil(LanguageWordlists.bestMatch(for: "ghbdtn"))
+        XCTAssertNil(LanguageWordlists.bestMatch(for: "сяуы"))
     }
 
     func testShouldVeto_MixedScriptAbstains() {
