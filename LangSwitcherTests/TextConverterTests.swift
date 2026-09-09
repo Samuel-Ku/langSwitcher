@@ -74,15 +74,15 @@ final class TextConverterTests: XCTestCase {
     }
     
     func testLooksLikeWrongLayout_CorrectLatin() {
-        // "hello" is correct English — converting to Russian gives Cyrillic gibberish "руддщ"
-        // BUT "hello" itself is Latin, and "руддщ" is non-Latin, so it would look like wrong layout.
-        // Actually, looksLikeWrongLayout checks if converting SWITCHES script.
-        // "hello" → RU → "руддщ" → sourceHasLatinOnly && convertedHasNonLatin → true
-        // This is expected: without a dictionary, the algorithm can't tell "hello" from "ghbdtn"
-        // Both are Latin text that produce Cyrillic when converted.
-        // The algorithm relies on context (user pressed the hotkey = they want conversion).
+        // "hello" is correct English — but it is ALSO a valid pl_PL dictionary
+        // word (embedded wordlist), so the single-word dictionary veto now
+        // refuses to flag it. That is the desired behavior: the auto Space
+        // flow must not garble real words. The manual hotkey path
+        // (convertSelectedText) deliberately skips the veto and still converts.
         let result = converter.looksLikeWrongLayout("hello")
-        XCTAssertTrue(result, "Any Latin text looks like wrong layout when RU is available (script switches)")
+        XCTAssertFalse(result, "Dictionary words are protected from auto-conversion")
+        XCTAssertEqual(converter.convertSelectedText("hello"), "руддщ",
+                       "Manual hotkey conversion stays permissive")
     }
     
     func testLooksLikeWrongLayout_EmptyString() {
@@ -107,6 +107,35 @@ final class TextConverterTests: XCTestCase {
         XCTAssertTrue(converter.looksLikeWrongLayout("ghbdtn123"))
     }
     
+    // MARK: - Cyrillic→Polish (Latin-script diacritics, Issue: "сяуы≠ = cześć")
+    //
+    // Polish diacritics are Latin-script but non-ASCII. The old isASCII-based
+    // script check treated a Cyrillic→Polish conversion as "no script switch"
+    // and discarded the correct conversion, so text was selected but never
+    // replaced. Classification must be by Unicode script, not ASCII range.
+    
+    func testLooksLikeWrongLayout_CyrillicToPolishDiacritics() {
+        // "сяуы" typed on Ukrainian-PC while Polish Pro intended → "cześ"
+        // (the ≠ Option artifact rides along in the real flow; the base word
+        // must already register as wrong-layout)
+        XCTAssertTrue(converter.looksLikeWrongLayout("сяуы"),
+                      "Cyrillic that converts to Polish diacritics must count as wrong layout")
+    }
+    
+    func testLooksLikeWrongLayout_CyrillicToPolishWordWithSpace() {
+        // Same word with the trailing Space the greedy flow captures
+        XCTAssertTrue(converter.looksLikeWrongLayout("сяуы≠ "))
+    }
+    
+    func testLooksLikeWrongLayout_PolishDiacriticsToCyrillic() {
+        // Reverse direction: Polish diacritics typed on Polish Pro while
+        // Ukrainian active convert to Cyrillic — also a script switch.
+        // Note: "cześć" itself is now protected by the dictionary veto
+        // (it is real Polish, see LanguageWordlistTests), so use a
+        // diacritic string that is not a dictionary word.
+        XCTAssertTrue(converter.looksLikeWrongLayout("ąśęźż"))
+    }
+    
     // MARK: - Tokenization (tested via findWrongLayoutBoundary)
     
     func testFindBoundary_AllWrongLayout() {
@@ -127,8 +156,10 @@ final class TextConverterTests: XCTestCase {
     }
     
     func testFindBoundary_MixedLine_MultipleCyrillicThenLatin() {
-        // Same reasoning: all words (Cyrillic and Latin) switch script when converted,
-        // so Pass 1 fires and converts the entire line.
+        // All words switch script when converted, so Pass 1 fires and
+        // converts the entire line. "мир" is a real Ukrainian dictionary
+        // word, but it has only 3 letters — the single-word veto requires
+        // ≥4 — so it still registers as wrong-layout here.
         let boundary = converter.findWrongLayoutBoundary(in: "Привет мир ghbdtn rfr")
         XCTAssertNotNil(boundary)
         XCTAssertEqual(boundary?.keep, "")
@@ -385,6 +416,41 @@ final class TextConverterTests: XCTestCase {
         // ż/ó/ł/ć are outside the US alphabet: with a US+RU pair the word
         // would convert only partially, so the auto flow must abstain.
         XCTAssertFalse(converter.shouldAutoCorrect("Zażółć"))
+    }
+    
+    func testShouldAutoCorrect_SourceOptionLayerCharsAllowed() {
+        // ⌥-layer characters the source layout itself produces (e.g. ы = ⌥+S
+        // on Ukrainian-PC when a Polish ś chord was pressed) are explainable
+        // by the source layout and must not veto the auto flow.
+        do {
+            let saved = settings.enabledLayouts
+            settings.enabledLayouts = [
+                KeyboardLayout(id: "com.apple.keylayout.PolishPro", localizedName: "Polish", languageCode: "pl"),
+                KeyboardLayout(id: "com.apple.keylayout.Ukrainian-PC", localizedName: "Ukrainian – PC", languageCode: "uk"),
+            ]
+            let plUaConverter = TextConverter(settingsManager: settings)
+            XCTAssertTrue(plUaConverter.shouldAutoCorrect("сяуы"),
+                          "Ukrainian-PC ⌥-layer char ы must not veto auto-correct")
+            XCTAssertTrue(plUaConverter.shouldAutoCorrect("ьƒлф"),
+                          "Ukrainian-PC ⌥-layer char ƒ must not veto auto-correct")
+            settings.enabledLayouts = saved
+        }
+    }
+    
+    func testConvertSelectedText_CyrillicOptionChordsToPolish() {
+        // End-to-end regression for "сяуы≠ = cześć": Polish typed on
+        // Ukrainian-PC (⌥-chords land as ы ≠) must convert fully.
+        do {
+            let saved = settings.enabledLayouts
+            settings.enabledLayouts = [
+                KeyboardLayout(id: "com.apple.keylayout.PolishPro", localizedName: "Polish", languageCode: "pl"),
+                KeyboardLayout(id: "com.apple.keylayout.Ukrainian-PC", localizedName: "Ukrainian – PC", languageCode: "uk"),
+            ]
+            let plUaConverter = TextConverter(settingsManager: settings)
+            XCTAssertEqual(plUaConverter.convertSelectedText("сяуы≠"), "cześć")
+            XCTAssertEqual(plUaConverter.convertLineGreedy("сяуы≠ "), "cześć ")
+            settings.enabledLayouts = saved
+        }
     }
     
     func testShouldAutoCorrect_EmptyAbstains() {

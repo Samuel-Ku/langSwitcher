@@ -94,7 +94,9 @@ final class TextConverter {
     /// - at least `autoCorrectMinLetters` letters,
     /// - no digits (versions, identifiers, model numbers),
     /// - every letter belongs to the detected source alphabet
-    ///   (Polish diacritics count when the source is Polish).
+    ///   (Polish diacritics count when the source is Polish; so do the
+    ///   source layout's ⌥-layer characters, e.g. ы = ⌥+S on Ukrainian-PC
+    ///   from a pressed Polish ś chord).
     /// The last rule also rejects mixed-script words: the foreign half is
     /// outside the detected alphabet, so converting would garble it.
     func shouldAutoCorrect(_ text: String) -> Bool {
@@ -114,9 +116,14 @@ final class TextConverter {
         }
         let alphabet = Set(sourceMap.values)
         let isPolishSource = sourceID.lowercased().contains("polish")
+        // ⌥-layer characters produced by the source layout itself (e.g. ы =
+        // ⌥+S on Ukrainian-PC when a Polish ś chord was pressed) are
+        // explainable by the source layout and must not veto correction.
+        let sourceOptionChars = LayoutCharacterMap.optionCharacterMap(for: sourceID).map { Set($0.values) }
         for letter in letters {
             if alphabet.contains(letter) { continue }
             if isPolishSource, LayoutCharacterMap.polishDiacriticBases[letter] != nil { continue }
+            if let sourceOptionChars, sourceOptionChars.contains(letter) { continue }
             return false
         }
         return true
@@ -161,25 +168,58 @@ final class TextConverter {
         
         NSLog("[LangSwitcher] looksLikeWrongLayout: detected source='\(detectedSourceID)' for '\(trimmed)'")
         
+        // Dictionary veto (embedded PL/UA frequency lists): if the text is
+        // already correct Polish or Ukrainian, converting it would garble
+        // real words — refuse. This is what stopped "hello"/"cześć" from
+        // looking "wrong" the moment a Cyrillic layout was enabled.
+        if LanguageWordlists.shouldVeto(text: trimmed) {
+            NSLog("[LangSwitcher] looksLikeWrongLayout: vetoed — text is already valid PL/UA")
+            return false
+        }
+        
         // Try converting to each other layout and see if it "makes more sense"
         for layout in layouts where layout.id != detectedSourceID {
             if let converted = LayoutMapper.convert(text: trimmed, from: detectedSourceID, to: layout.id) {
                 NSLog("[LangSwitcher] looksLikeWrongLayout: converted to '\(converted)' via layout '\(layout.id)'")
                 
-                let sourceHasLatinOnly = trimmed.allSatisfy { $0.isASCII || !$0.isLetter }
-                let convertedHasNonLatin = converted.contains { !$0.isASCII && $0.isLetter }
+                // Script classification must use Unicode script, not isASCII:
+                // Polish diacritics (ś ć ą …) are Latin-script letters but NOT
+                // ASCII, so an isASCII-based check treated a Cyrillic→Polish
+                // conversion (сяуы→cześ) as "no script switch" and silently
+                // discarded the correct result — text got selected but never
+                // replaced. Latin = letters in the Latin Unicode blocks;
+                // Cyrillic (U+0400–U+04FF) and all other scripts fall outside.
+                func isLatinScript(_ c: Character) -> Bool {
+                    guard c.isLetter else { return false }
+                    return c.unicodeScalars.allSatisfy { scalar in
+                        switch scalar.value {
+                        case 0x300...0x36F: return true   // combining marks (decomposed forms)
+                        case 0x41...0x5A, 0x61...0x7A: return true   // A–Z a–z
+                        case 0xC0...0xFF: return true     // Latin-1 Supplement (À–ÿ, ü é ñ ó)
+                        case 0x100...0x24F: return true   // Latin Extended-A/B (ą ć ś ł Ő …)
+                        case 0x1E00...0x1EFF: return true // Latin Extended Additional
+                        default: return false
+                        }
+                    }
+                }
+                func hasNonLatinLetter(_ s: String) -> Bool {
+                    s.contains { $0.isLetter && !isLatinScript($0) }
+                }
                 
-                let sourceHasNonLatin = trimmed.contains { !$0.isASCII && $0.isLetter }
-                let convertedHasLatinOnly = converted.allSatisfy { $0.isASCII || !$0.isLetter }
+                let sourceHasLatinOnly = !hasNonLatinLetter(trimmed)
+                let convertedHasNonLatin = hasNonLatinLetter(converted)
+                
+                let sourceHasNonLatin = hasNonLatinLetter(trimmed)
+                let convertedHasLatinOnly = !hasNonLatinLetter(converted)
                 
                 NSLog("[LangSwitcher] looksLikeWrongLayout: srcLatinOnly=\(sourceHasLatinOnly) convNonLatin=\(convertedHasNonLatin) srcNonLatin=\(sourceHasNonLatin) convLatinOnly=\(convertedHasLatinOnly)")
                 
-                // Case 1: "ghbdtn" (all ASCII) -> "привет" (non-ASCII) = wrong layout
+                // Case 1: "ghbdtn" (all Latin) -> "привет" (non-Latin) = wrong layout
                 if sourceHasLatinOnly && convertedHasNonLatin {
                     return true
                 }
                 
-                // Case 2: "руддщ" (non-ASCII) -> "hello" (all ASCII) = wrong layout
+                // Case 2: "руддщ" (non-Latin) -> "hello" (all Latin) = wrong layout
                 if sourceHasNonLatin && convertedHasLatinOnly {
                     return true
                 }
