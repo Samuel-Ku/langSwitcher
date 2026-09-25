@@ -37,6 +37,9 @@
 		E10000010000000000000026 /* FrontmostAppProbe.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10000020000000000000026 /* FrontmostAppProbe.swift */; };
 		E10000010000000000000029 /* WordlistData.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10000020000000000000029 /* WordlistData.swift */; };
 		E10000010000000000000030 /* LanguageWordlists.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10000020000000000000030 /* LanguageWordlists.swift */; };
+		E10000010000000000000031 /* ThoughtRecovery.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10000020000000000000031 /* ThoughtRecovery.swift */; };
+		E10000010000000000000032 /* UserDictionary.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10000020000000000000032 /* UserDictionary.swift */; };
+		E10000010000000000000033 /* RecoveryPreviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10000020000000000000033 /* RecoveryPreviewView.swift */; };
 		E10000010000000000000101 /* LayoutMapperTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10000020000000000000101 /* LayoutMapperTests.swift */; };
 		E10000010000000000000102 /* TextConverterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10000020000000000000102 /* TextConverterTests.swift */; };
 		E10000010000000000000103 /* HotkeyManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10000020000000000000103 /* HotkeyManagerTests.swift */; };
@@ -44,6 +47,7 @@
 		E10000010000000000000105 /* PermissionStatusTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10000020000000000000105 /* PermissionStatusTests.swift */; };
 		E10000010000000000000106 /* CrossAppVerificationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10000020000000000000106 /* CrossAppVerificationTests.swift */; };
 		E10000010000000000000107 /* LanguageWordlistTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10000020000000000000107 /* LanguageWordlistTests.swift */; };
+		E10000010000000000000108 /* ThoughtRecoveryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10000020000000000000108 /* ThoughtRecoveryTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -87,6 +91,9 @@
 		E10000020000000000000026 /* FrontmostAppProbe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FrontmostAppProbe.swift; sourceTree = "<group>"; };
 		E10000020000000000000029 /* WordlistData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WordlistData.swift; sourceTree = "<group>"; };
 		E10000020000000000000030 /* LanguageWordlists.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LanguageWordlists.swift; sourceTree = "<group>"; };
+		E10000020000000000000031 /* ThoughtRecovery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThoughtRecovery.swift; sourceTree = "<group>"; };
+		E10000020000000000000032 /* UserDictionary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserDictionary.swift; sourceTree = "<group>"; };
+		E10000020000000000000033 /* RecoveryPreviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecoveryPreviewView.swift; sourceTree = "<group>"; };
 		E10000020000000000000101 /* LayoutMapperTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LayoutMapperTests.swift; sourceTree = "<group>"; };
 		E10000020000000000000102 /* TextConverterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextConverterTests.swift; sourceTree = "<group>"; };
 		E10000020000000000000103 /* HotkeyManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HotkeyManagerTests.swift; sourceTree = "<group>"; };
@@ -94,6 +101,7 @@
 		E10000020000000000000105 /* PermissionStatusTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionStatusTests.swift; sourceTree = "<group>"; };
 		E10000020000000000000106 /* CrossAppVerificationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CrossAppVerificationTests.swift; sourceTree = "<group>"; };
 		E10000020000000000000107 /* LanguageWordlistTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LanguageWordlistTests.swift; sourceTree = "<group>"; };
+		E10000020000000000000108 /* ThoughtRecoveryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThoughtRecoveryTests.swift; sourceTree = "<group>"; };
 		E10000030000000000000001 /* LangSwitcher.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LangSwitcher.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		E10000030000000000000002 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		E10000030000000000000003 /* LangSwitcher.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = LangSwitcher.entitlements; sourceTree = "<group>"; };
@@ -189,6 +197,9 @@
 				E10000020000000000000026 /* FrontmostAppProbe.swift */,
 				E10000020000000000000029 /* WordlistData.swift */,
 				E10000020000000000000030 /* LanguageWordlists.swift */,
+				E10000020000000000000031 /* ThoughtRecovery.swift */,
+				E10000020000000000000032 /* UserDictionary.swift */,
+				E10000020000000000000033 /* RecoveryPreviewView.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -241,6 +252,7 @@
 				E10000020000000000000105 /* PermissionStatusTests.swift */,
 				E10000020000000000000106 /* CrossAppVerificationTests.swift */,
 				E10000020000000000000107 /* LanguageWordlistTests.swift */,
+				E10000020000000000000108 /* ThoughtRecoveryTests.swift */,
 			);
 			path = LangSwitcherTests;
 			sourceTree = "<group>";
@@ -373,6 +385,9 @@
 				E10000010000000000000026 /* FrontmostAppProbe.swift in Sources */,
 				E10000010000000000000029 /* WordlistData.swift in Sources */,
 				E10000010000000000000030 /* LanguageWordlists.swift in Sources */,
+				E10000010000000000000031 /* ThoughtRecovery.swift in Sources */,
+				E10000010000000000000032 /* UserDictionary.swift in Sources */,
+				E10000010000000000000033 /* RecoveryPreviewView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -387,6 +402,7 @@
 				E10000010000000000000105 /* PermissionStatusTests.swift in Sources */,
 				E10000010000000000000106 /* CrossAppVerificationTests.swift in Sources */,
 				E10000010000000000000107 /* LanguageWordlistTests.swift in Sources */,
+				E10000010000000000000108 /* ThoughtRecoveryTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

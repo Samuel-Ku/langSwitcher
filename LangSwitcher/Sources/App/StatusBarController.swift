@@ -15,6 +15,7 @@ final class StatusBarController {
     private var aboutWindow: NSWindow?
     
     var onConvertAction: (() -> Void)?
+    var onPreviewRecoveryAction: (() -> Void)?
     
     private var l10n: LocalizationManager { LocalizationManager.shared }
     
@@ -63,7 +64,17 @@ final class StatusBarController {
         )
         convertItem.target = self
         menu.addItem(convertItem)
-        
+
+        // Thought Recovery preview (idea document UX)
+        let previewItem = NSMenuItem(
+            title: l10n.t("menu.previewRecovery"),
+            action: #selector(previewRecoveryAction),
+            keyEquivalent: ""
+        )
+        previewItem.target = self
+        previewItem.isEnabled = settingsManager.thoughtRecoveryEnabled
+        menu.addItem(previewItem)
+
         menu.addItem(NSMenuItem.separator())
         
         // Active layouts info
@@ -123,6 +134,10 @@ final class StatusBarController {
     
     @objc private func convertAction() {
         onConvertAction?()
+    }
+
+    @objc private func previewRecoveryAction() {
+        onPreviewRecoveryAction?()
     }
     
     @objc private func openSettings() {

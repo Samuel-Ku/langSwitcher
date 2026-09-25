@@ -166,6 +166,60 @@ final class AccessibilityService {
         return true
     }
     
+    // MARK: - Thought Recovery Preview
+
+    /// Select from the cursor to the start of the line and copy it, but keep
+    /// the selection active instead of pasting. Used by the recovery preview,
+    /// which decides what to paste while the user looks at the options. The
+    /// caller must put the target app back in front before pasting or
+    /// deselecting (the selection survives the app losing focus).
+    func selectLineKeepingSelection() -> String? {
+        let pasteboard = NSPasteboard.general
+        let savedContents = savePasteboard()
+
+        NSLog("[LangSwitcher] selectLineKeepingSelection: selecting to line start...")
+        simulateSelectToLineStart()
+        usleep(150_000)
+
+        pasteboard.clearContents()
+        simulateCopy()
+        usleep(150_000)
+
+        guard let selectedText = pasteboard.string(forType: .string),
+              !selectedText.isEmpty else {
+            NSLog("[LangSwitcher] selectLineKeepingSelection: no text copied, deselecting")
+            simulateRightArrow()
+            restorePasteboard(savedContents)
+            return nil
+        }
+
+        NSLog("[LangSwitcher] selectLineKeepingSelection: copied '\(selectedText)'")
+        restorePasteboard(savedContents)
+        return selectedText
+    }
+
+    /// Paste `text` into the focused app, replacing the active selection.
+    /// The caller is responsible for bringing the target app to the front.
+    func pasteReplacingSelection(_ text: String) {
+        let pasteboard = NSPasteboard.general
+        pasteboard.clearContents()
+        pasteboard.setString(text, forType: .string)
+        NSLog("[LangSwitcher] pasteReplacingSelection: '\(text)'")
+        simulatePaste()
+    }
+
+    /// Copy text to the clipboard without touching any app.
+    func copyToPasteboard(_ text: String) {
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(text, forType: .string)
+    }
+
+    /// Collapse the still-active selection (right arrow) after the user 
+    /// cancelled the preview.
+    func collapseSelection() {
+        simulateRightArrow()
+    }
+
     // MARK: - Focused Field (Issue #6)
     
     /// Role/subrole of the currently focused UI element, or nil when it

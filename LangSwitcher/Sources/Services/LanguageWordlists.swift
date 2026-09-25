@@ -110,6 +110,58 @@ enum LanguageWordlists {
         return tokens.contains { combined.contains($0) }
     }
 
+    // MARK: - Per-word evidence (Thought Recovery)
+
+    /// Is `word` a dictionary word of `language`? Case-insensitive.
+    /// Single-word evidence for the span-level decoder: a dictionary hit is
+    /// the strongest signal available without an LLM, so it must be
+    /// queryable per language (not just as a script union).
+    static func isDictionaryWord(_ word: String, language: Language) -> Bool {
+        let normalized = word.lowercased()
+        guard !normalized.isEmpty else { return false }
+        return words(for: language).contains(normalized)
+    }
+
+    /// Dictionary words of `language`, most frequent first (the embedded
+    /// lists are frequency-ranked). Used to train the character n-gram
+    /// tables of the span-level decoder.
+    static func topWords(_ language: Language, limit: Int) -> [String] {
+        if let cached = topWordCache[language], cached.count >= limit {
+            return Array(cached.prefix(limit))
+        }
+        let all = topWordList(for: language)
+        topWordCache[language] = all
+        return Array(all.prefix(limit))
+    }
+
+    /// Languages that write with a given script, in tie-break order.
+    static func languages(writing script: String) -> [Language] {
+        script == "latin" ? [.polish, .english] : [.ukrainian, .russian]
+    }
+
+    /// "latin" / "cyrillic" / nil for mixed or letter-less text.
+    /// Uses the same Unicode-block classification as the veto path.
+    static func writingScript(of text: String) -> String? {
+        switch script(of: text) {
+        case .latin: return "latin"
+        case .cyrillic: return "cyrillic"
+        case nil: return nil
+        }
+    }
+
+    private static var topWordCache: [Language: [String]] = [:]
+
+    private static func topWordList(for language: Language) -> [String] {
+        let raw: String
+        switch language {
+        case .polish: raw = WordlistData.polish
+        case .ukrainian: raw = WordlistData.ukrainian
+        case .english: raw = WordlistData.english
+        case .russian: raw = WordlistData.russian
+        }
+        return raw.split(separator: "\n").map(String.init).filter { !$0.isEmpty }
+    }
+
     // MARK: - Internals
 
     enum Language: CaseIterable {

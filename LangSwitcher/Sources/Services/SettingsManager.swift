@@ -161,6 +161,31 @@ final class SettingsManager: ObservableObject {
     @Published var logMaxEntries: Int {
         didSet { defaults.set(logMaxEntries, forKey: Keys.logMaxEntries) }
     }
+
+    /// Thought Recovery: reconstruct a whole line span by span instead of
+    /// converting one wrong-layout tail. Default: ON — the decoder abstains
+    /// unless a span has decisive dictionary/n-gram evidence, so correct text,
+    /// code, links and intentional foreign words are left alone.
+    @Published var thoughtRecoveryEnabled: Bool {
+        didSet { defaults.set(thoughtRecoveryEnabled, forKey: Keys.thoughtRecoveryEnabled) }
+    }
+
+    /// Show the reconstruction (with alternatives) before applying it, instead
+    /// of pasting straight into the app. Default: OFF.
+    @Published var thoughtRecoveryPreview: Bool {
+        didSet { defaults.set(thoughtRecoveryPreview, forKey: Keys.thoughtRecoveryPreview) }
+    }
+
+    /// How many lines Thought Recovery rewrote.
+    @Published var recoveryCount: Int {
+        didSet { defaults.set(recoveryCount, forKey: Keys.recoveryCount) }
+    }
+
+    /// How many recoveries the user reverted. Every revert also teaches the
+    /// personal dictionary, so this is the "undo rate" of the feature.
+    @Published var recoveryRevertCount: Int {
+        didSet { defaults.set(recoveryRevertCount, forKey: Keys.recoveryRevertCount) }
+    }
     
     // MARK: - Computed
     
@@ -186,6 +211,12 @@ final class SettingsManager: ObservableObject {
         }
     }
     
+    /// Share of recoveries the user took back (the idea document's undo rate).
+    var recoveryRevertRate: Double {
+        guard recoveryCount > 0 else { return 0 }
+        return Double(recoveryRevertCount) / Double(recoveryCount)
+    }
+
     var hotkeyModifierFlags: NSEvent.ModifierFlags {
         get { NSEvent.ModifierFlags(rawValue: hotkeyModifiers) }
         set { hotkeyModifiers = newValue.rawValue }
@@ -217,6 +248,10 @@ final class SettingsManager: ObservableObject {
         static let loggingEnabled = "loggingEnabled"
         static let logMaxEntries = "logMaxEntries"
         static let autoCorrectOnSpace = "autoCorrectOnSpace"
+        static let thoughtRecoveryEnabled = "thoughtRecoveryEnabled"
+        static let thoughtRecoveryPreview = "thoughtRecoveryPreview"
+        static let recoveryCount = "recoveryCount"
+        static let recoveryRevertCount = "recoveryRevertCount"
     }
     
     // MARK: - Init
@@ -248,9 +283,13 @@ final class SettingsManager: ObservableObject {
         self.layoutSwitchMode = LayoutSwitchMode(rawValue: savedLayoutSwitchMode ?? 0) ?? .always // Default: always
         
         self.conversionCount = defaults.integer(forKey: Keys.conversionCount)
+        self.recoveryCount = defaults.integer(forKey: Keys.recoveryCount)
+        self.recoveryRevertCount = defaults.integer(forKey: Keys.recoveryRevertCount)
         self.loggingEnabled = defaults.object(forKey: Keys.loggingEnabled) as? Bool ?? false  // Default: OFF
         self.logMaxEntries = defaults.object(forKey: Keys.logMaxEntries) as? Int ?? 100       // Default: 100
         self.autoCorrectOnSpace = defaults.object(forKey: Keys.autoCorrectOnSpace) as? Bool ?? true   // Default: ON (dictionary veto makes it safe)
+        self.thoughtRecoveryEnabled = defaults.object(forKey: Keys.thoughtRecoveryEnabled) as? Bool ?? true  // Default: ON (decoder abstains when unsure)
+        self.thoughtRecoveryPreview = defaults.object(forKey: Keys.thoughtRecoveryPreview) as? Bool ?? false // Default: OFF (paste directly)
         
         // Load layouts
         if let data = defaults.data(forKey: Keys.enabledLayouts),

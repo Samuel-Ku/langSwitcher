@@ -176,6 +176,14 @@ final class TextConverter {
             NSLog("[LangSwitcher] looksLikeWrongLayout: vetoed — text is already valid PL/UA")
             return false
         }
+
+        // Personal dictionary: words the user taught us by reverting a
+        // Thought Recovery are intentional by definition. This is what makes
+        // "undo teaches the dictionary" cover the automatic flows too.
+        if UserDictionary.shared.containsAny(in: trimmed) {
+            NSLog("[LangSwitcher] looksLikeWrongLayout: vetoed — user dictionary word")
+            return false
+        }
         
         // Try converting to each other layout and see if it "makes more sense"
         for layout in layouts where layout.id != detectedSourceID {
@@ -332,6 +340,46 @@ final class TextConverter {
         return (keep: keep, convert: convert)
     }
     
+    // MARK: - Thought Recovery
+
+    /// Span-level reconstruction of a whole line (see ThoughtRecovery and
+    /// docs/content/en/guide/6.thought-recovery.md). Unlike the boundary search
+    /// below, this keeps correct words, code, links and intentional foreign
+    /// words in place and rewrites only the spans with decisive evidence.
+    /// Returns nil when nothing should change (or the feature is off), so the
+    /// caller can fall back to the boundary heuristic.
+    func recoverLine(_ text: String) -> ConversionResult? {
+        guard settingsManager.thoughtRecoveryEnabled else { return nil }
+        let layouts = settingsManager.enabledLayouts
+        guard layouts.count >= 2 else { return nil }
+
+        let plan = ThoughtRecovery.decode(
+            text,
+            layoutIDs: layouts.map(\.id),
+            learnedWords: UserDictionary.shared.words
+        )
+        guard plan.isChanged else {
+            NSLog("[LangSwitcher] recoverLine: nothing to change in '\(text)'")
+            return nil
+        }
+
+        NSLog("[LangSwitcher] recoverLine: '\(text)' -> '\(plan.reconstructed)' (confidence=\(plan.confidence), target=\(plan.primaryTargetLayoutID ?? "nil"))")
+        return ConversionResult(text: plan.reconstructed, targetLayoutID: plan.primaryTargetLayoutID ?? "")
+    }
+
+    /// Full plan for the preview window: original, reconstruction, per-span
+    /// kinds and the runner-up reconstructions.
+    func recoveryPlan(for text: String) -> ThoughtRecovery.Plan? {
+        guard settingsManager.thoughtRecoveryEnabled else { return nil }
+        let layouts = settingsManager.enabledLayouts
+        guard layouts.count >= 2 else { return nil }
+        return ThoughtRecovery.decode(
+            text,
+            layoutIDs: layouts.map(\.id),
+            learnedWords: UserDictionary.shared.words
+        )
+    }
+
     /// Convert only the wrong-layout portion of a line.
     /// Returns the full replacement text (keep + converted) or nil if nothing to convert.
     func convertLineGreedy(_ text: String) -> String? {
