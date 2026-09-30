@@ -129,12 +129,14 @@ final class TextConverterTests: XCTestCase {
     }
     
     func testLooksLikeWrongLayout_PolishDiacriticsToCyrillic() {
-        // Reverse direction: Polish diacritics typed on Polish Pro while
-        // Ukrainian active convert to Cyrillic — also a script switch.
-        // Note: "cześć" itself is now protected by the dictionary veto
-        // (it is real Polish, see LanguageWordlistTests), so use a
-        // diacritic string that is not a dictionary word.
-        XCTAssertTrue(converter.looksLikeWrongLayout("ąśęźż"))
+        // Polish-Pro-only diacritics (ą ś ę ź ż) are not explainable by the
+        // enabled US+RU layouts, so flagging them would mean guessing a
+        // conversion. Safe-by-default keeps them (mirrors the
+        // testShouldAutoCorrect_PartiallyConvertibleAbstains rule for
+        // "Zażółć"). The recoverable reverse-direction case — Polish
+        // diacritics typed via ⌥-chords on a Cyrillic layout — is covered
+        // by testLooksLikeWrongLayout_CyrillicToPolishWordWithSpace ("сяуы≠").
+        XCTAssertFalse(converter.looksLikeWrongLayout("ąśęźż"))
     }
     
     // MARK: - Tokenization (tested via findWrongLayoutBoundary)
@@ -147,13 +149,16 @@ final class TextConverterTests: XCTestCase {
     }
     
     func testFindBoundary_MixedLine_CyrillicThenLatin() {
-        // "Привет ghbdtn" — both words trigger looksLikeWrongLayout (both scripts switch
-        // when converted). Without a dictionary, the algorithm can't distinguish "correct
-        // Cyrillic" from "wrong-layout Cyrillic". Pass 1 sees ALL words as wrong → converts entire line.
+        // "Привет ghbdtn" — the dictionary veto (≥4-letter real word)
+        // recognizes "Привет" as correct Cyrillic and keeps it, while the
+        // greedy pass converts the wrong-layout tail "ghbdtn". Before the
+        // veto existed the whole line was converted; that garbled real
+        // words, which is exactly what commit "dictionary veto stops
+        // auto-conversion garbling correct PL/UA words" fixed.
         let boundary = converter.findWrongLayoutBoundary(in: "Привет ghbdtn")
         XCTAssertNotNil(boundary)
-        XCTAssertEqual(boundary?.keep, "")
-        XCTAssertEqual(boundary?.convert, "Привет ghbdtn")
+        XCTAssertEqual(boundary?.keep, "Привет ")
+        XCTAssertEqual(boundary?.convert, "ghbdtn")
     }
     
     func testFindBoundary_MixedLine_MultipleCyrillicThenLatin() {
