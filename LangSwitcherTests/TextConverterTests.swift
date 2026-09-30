@@ -9,10 +9,11 @@ final class TextConverterTests: XCTestCase {
     // so tests must check that at least US+Russian are present for core tests.
     
     private var converter: TextConverter!
+    private var settings: SettingsManager!
     
     override func setUp() {
         super.setUp()
-        let settings = SettingsManager.shared
+        settings = SettingsManager.shared
         // Ensure we have at least US and Russian layouts for testing
         let hasUS = settings.enabledLayouts.contains { $0.id.lowercased().contains("us") || $0.id.lowercased().contains("abc") }
         let hasRU = settings.enabledLayouts.contains { $0.id.lowercased().contains("russian") }
