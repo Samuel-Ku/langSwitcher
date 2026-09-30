@@ -25,8 +25,12 @@ jobs:
     # Fail fast on project-file drift (files referenced from the wrong
     # group, entries that do not resolve on disk) before paying for any
     # macOS runner — Xcode trusts the pbxproj, so drift only surfaces here.
+    # --self-test runs the drift fixtures first: if the checker itself
+    # regresses, it must fail here, not wave real drift through.
     - name: Verify project file integrity
-      run: python3 scripts/verify-pbxproj.py
+      run: |
+        python3 scripts/verify-pbxproj.py --self-test
+        python3 scripts/verify-pbxproj.py
 
     - name: Check for Swift/Xcode changes
       uses: dorny/paths-filter@v3
