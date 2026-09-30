@@ -37,6 +37,17 @@ POLL_SECONDS=60
 # LaunchAgents run from / — locate the repo from the script's own path.
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
+# launchd's PATH is minimal (/usr/bin:/bin:...) and may not contain gh.
+find_gh() {
+  if command -v gh >/dev/null 2>&1; then command -v gh; return; fi
+  local candidate
+  for candidate in /usr/local/bin/gh /opt/homebrew/bin/gh "$HOME/.local/bin/gh"; do
+    [[ -x "$candidate" ]] && { echo "$candidate"; return; }
+  done
+  echo "gh"  # last resort: let it fail visibly in the log
+}
+GH_BIN="$(find_gh)"
+
 say() { printf '%s %s\n' "$(date '+%H:%M:%S')" "$*"; }
 
 latest_sha() {
@@ -55,7 +66,7 @@ dispatch_if_needed() {
   fi
 
   # Has this commit already got a run? (covers the state file being wiped.)
-  if gh run list --repo "$REPO" --branch "$BRANCH" --limit 5 \
+  if "$GH_BIN" run list --repo "$REPO" --branch "$BRANCH" --limit 5 \
        --json headSha,status --jq '.[] | .headSha' | grep -q "^${sha}"; then
     say "run already exists for $sha — recording and skipping"
     echo "$sha" > "$STATE"
@@ -63,7 +74,7 @@ dispatch_if_needed() {
   fi
 
   say "new commit $sha — dispatching ${WORKFLOW}"
-  if gh workflow run "$WORKFLOW" --repo "$REPO" --ref "$BRANCH"; then
+  if "$GH_BIN" workflow run "$WORKFLOW" --repo "$REPO" --ref "$BRANCH"; then
     echo "$sha" > "$STATE"
     say "dispatched; state updated"
   else
