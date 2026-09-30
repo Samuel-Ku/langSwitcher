@@ -176,6 +176,7 @@
 				E10000020000000000000014 /* HotkeyRecorderView.swift */,
 				E10000020000000000000015 /* PermissionsView.swift */,
 				E10000020000000000000018 /* ConversionLogView.swift */,
+				E10000020000000000000033 /* RecoveryPreviewView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -199,7 +200,6 @@
 				E10000020000000000000030 /* LanguageWordlists.swift */,
 				E10000020000000000000031 /* ThoughtRecovery.swift */,
 				E10000020000000000000032 /* UserDictionary.swift */,
-				E10000020000000000000033 /* RecoveryPreviewView.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
