@@ -7,6 +7,7 @@ export default defineNuxtConfig({
     locales: [
       { code: 'en', name: 'English' },
       { code: 'ru', name: 'Русский' },
+      { code: 'ua', name: 'Українська' },
     ],
     rootRedirect: 'en',
   },
@@ -26,7 +27,7 @@ export default defineNuxtConfig({
   nitro: {
     prerender: {
       crawlLinks: true,
-      routes: ['/', '/en', '/ru'],
+      routes: ['/', '/en', '/ru', '/ua'],
     },
   },
 })
