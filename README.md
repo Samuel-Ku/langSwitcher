@@ -437,6 +437,16 @@ The hook is versioned, but git only honors it via the repo-local `core.hooksPath
 
 The script is idempotent — safe to re-run. Check whether the hook is active anytime with `scripts/install-hooks.sh --status`. To skip the check for a single commit, use `git commit --no-verify` (CI runs the same verifier regardless).
 
+### Auto-CI poller (forks)
+
+[scripts/auto-ci-dispatch.sh](scripts/auto-ci-dispatch.sh) is a workaround for a GitHub quirk: **forks don't run workflows on push until someone clicks "enable" on the Actions tab once** — that flag has no REST API, so pushes land but `on.push` triggers never fire. The script registers a LaunchAgent that polls origin/main every 60 s and dispatches the `Build & Release` workflow for any commit that doesn't have a run yet (idempotent — state file + run-list veto mean restarts never double-dispatch).
+
+- `scripts/auto-ci-dispatch.sh install` — register the LaunchAgent
+- `scripts/auto-ci-dispatch.sh status` — read-only report: agent loaded (exit 0/1), plist, last-seen SHA, poller log tail, recent dispatched runs
+- `scripts/auto-ci-dispatch.sh uninstall` — remove the agent
+
+**Who needs this:** only contributors on forks where automatic triggers are still disabled — if pushes already start CI runs natively, you don't need the poller. Once GitHub's one-time enable click has been made on your fork's Actions tab, uninstall the poller and push triggers work by themselves. Both lifecycle paths are covered by the CI self-test (`scripts/test-auto-ci-dispatch.sh`, stubbed `gh`, no network) and the poll status subcommand.
+
 ## Donate
 
 LangSwitcher is free and open-source. If you find it useful, any contribution is welcome and helps keep the project alive. Thank you for your support!
