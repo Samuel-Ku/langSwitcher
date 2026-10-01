@@ -435,7 +435,7 @@ The hook is versioned, but git only honors it via the repo-local `core.hooksPath
 ./scripts/install-hooks.sh
 ```
 
-The script is idempotent — safe to re-run. To skip the check for a single commit, use `git commit --no-verify` (CI runs the same verifier regardless).
+The script is idempotent — safe to re-run. Check whether the hook is active anytime with `scripts/install-hooks.sh --status`. To skip the check for a single commit, use `git commit --no-verify` (CI runs the same verifier regardless).
 
 ## Donate
 
