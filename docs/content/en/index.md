@@ -148,7 +148,7 @@ Features
     Conversion Log
 
     #description
-    Every conversion is logged to a local SQLite database. Rate results, export as JSON for ML training.
+    Optionally, every conversion is logged to a local SQLite database. Rate results, export as JSON for ML training.
     ::::
 
     ::::u-page-card
@@ -156,10 +156,10 @@ Features
     icon: i-lucide-globe
     ---
     #title
-    5 Layouts
+    8 Layouts
 
     #description
-    English, Russian, German, French, Spanish. Auto-detected from system keyboard settings.
+    English, Ukrainian, Russian, Polish, German, French, Spanish — auto-detected from system keyboard settings.
     ::::
 
     ::::u-page-card
