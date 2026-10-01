@@ -38,6 +38,13 @@ jobs:
     - name: Test hook installer
       run: scripts/test-install-hooks.sh
 
+    # auto-ci-dispatch.sh self-test: exercises the poll lifecycle (first
+    # dispatch, idempotent no-op, state-wipe recovery, failure/retry) against
+    # a stubbed gh and a throwaway repo + state file — no network, and it can
+    # never touch the real poller or dispatch real workflows.
+    - name: Test auto-ci-dispatch poller
+      run: scripts/test-auto-ci-dispatch.sh
+
     - name: Check for Swift/Xcode changes
       uses: dorny/paths-filter@v3
       id: filter
