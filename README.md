@@ -407,6 +407,9 @@ Release builds can be signed with an Apple Developer ID certificate and notarize
 git clone https://github.com/reg2005/langSwitcher.git
 cd langSwitcher
 
+# Activate the pre-commit pbxproj verifier (see "Git hooks" below)
+./scripts/install-hooks.sh
+
 # Run tests (required after every code change)
 xcodebuild test \
   -project LangSwitcher.xcodeproj \
@@ -421,6 +424,18 @@ open LangSwitcher.xcodeproj
 ```
 
 See [AGENTS.md](AGENTS.md) for AI agent / contributor guidelines.
+
+### Git hooks
+
+The repository ships a pre-commit hook (`githooks/pre-commit`) that runs `scripts/verify-pbxproj.py` before every commit. It catches `project.pbxproj` drift early — files referenced in Xcode but missing on disk, orphaned files, and test-target inconsistencies — instead of waiting for CI to fail.
+
+The hook is versioned, but git only honors it via the repo-local `core.hooksPath` config, which is **not** cloned. After a fresh clone, run once:
+
+```bash
+./scripts/install-hooks.sh
+```
+
+The script is idempotent — safe to re-run. To skip the check for a single commit, use `git commit --no-verify` (CI runs the same verifier regardless).
 
 ## Donate
 
