@@ -32,6 +32,12 @@ jobs:
         python3 scripts/verify-pbxproj.py --self-test
         python3 scripts/verify-pbxproj.py
 
+    # install-hooks.sh self-test: exercises the --status/install/uninstall
+    # lifecycle in a throwaway repo and proves a commit actually invokes the
+    # versioned pre-commit hook once core.hooksPath is configured.
+    - name: Test hook installer
+      run: scripts/test-install-hooks.sh
+
     - name: Check for Swift/Xcode changes
       uses: dorny/paths-filter@v3
       id: filter
